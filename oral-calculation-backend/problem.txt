@@ -1,0 +1,79 @@
+出题逻辑说明（后端：services/ProblemService.js）
+
+一、总览
+- 题型（type）：addition 加法 | subtraction 减法 | multiplication 乘法 | division 除法 | mixed 混合运算 | comparison 大小比较 | fill_blank 填空。
+- 难度（difficulty）：easy | medium | hard。
+- 表达式展示：统一使用 “×”“÷” 便于小学生阅读；内部计算会将 “×/＊/÷/∕” 归一化为 `*` 和 `/`，避免乱码且确保计算正确。
+
+二、各题型 × 难度 规则
+1) addition（加法）
+	- easy：加数在 1..20，保证和 ≤ 20（第二个加数会按第一个数收缩范围）。
+	- medium：两个数各在 10..100。
+	- hard：两个数各在 100..1000。
+
+2) subtraction（减法）
+	- easy：被减数 10..20、减数 1..被减数，保证结果 ≥ 0。
+	- medium：被减数 50..100、减数 1..50。
+	- hard：被减数 500..1000、减数 100..500。
+
+3) multiplication（乘法）
+	- easy：九九乘法表（1..9 × 1..9）。
+	- medium：两位数 × 一位数（10..99 × 2..9）。
+	- hard：两位数 × 两位数（10..99 × 10..99）。
+
+4) division（除法）
+	- easy：整除题，除数 1..9、商 1..9、被除数=除数×商（无余数）。
+	- medium：带余数，除数 2..9、商 5..20、余数 1..(除数-1)，被除数=除数×商+余数；题目对象包含 remainder 字段。
+	- hard：整除题，除数 2..9、商 10..99、被除数=除数×商。
+
+5) mixed（混合运算）
+	- easy：三个 1..20 的数，运算符仅在 +、- 中随机。
+	- medium：三个 2..9 的数，运算符在 “×、÷” 中随机；
+	  • 若第一个运算是 ÷，会将前项调整为“除数×随机数”，保证能整除；
+	  • 若第二个运算是 ÷，先计算前两项的临时值，再选取能整除的第三项因子，确保可整除。
+	- hard：带括号表达式 (a + b) × (c - d)，a/c 在 10..50，b/d 在 2..9。
+
+6) comparison（大小比较）
+	- easy：left/right 随机整数 1..20，答案为 '>' '<' '='。
+	- medium：left/right 各为两个 10..50 的加法表达式之和。
+	- hard：包含乘法与加法的式子（如 “A × B + C” vs “A + B × C”），答案为比较符号。
+
+7) fill_blank（填空）
+	- easy：加法填空（可能空第一项/运算符/第二项）；当空的是运算符时答案在 '+' 或 '-' 之间。
+	- medium：乘法填空（空乘数或被乘数，展示使用 “×”）。
+	- hard：幂运算填空（空底数/指数/结果：?^e、b^?、b^e=?）。
+
+三、选项（options）生成
+- 目标始终 4 个选项，包含正确答案且不重复；结果随机打乱。
+- 数值类：
+  • easy：扰动范围固定为 ±3；若出现负数在 easy 下取绝对值。
+  • medium：扰动范围为 max(2, floor(|answer|×0.2))。
+  • hard：扰动范围为 max(5, floor(|answer|×0.3))。
+- 字符串类（例如运算符填空）：
+  • 从运算符集合 ['+','-','×','÷'] 中剔除正确答案后随机补齐。
+
+四、表达式与计算细节
+- 展示：统一 “×”“÷”；例如 "24 × 6 ÷ 2"。
+- 计算：calculateExpression() 将 “×/＊”→`*`，“÷/∕”→`/` 后再计算。
+- 判分：
+  • 比较题：直接比对 '>'/'<'/'='。
+  • 填空且答案为字符串：直接字符串相等。
+  • 其他数值题：浮点容差判定（|answer - userAnswer| < 1e-4）。
+
+五、接口入口与参数
+1) 生成题目：GET /api/problems（需登录）
+	- Query：type、difficulty、count（≤50）、grade（可选；若给 grade 且未给 difficulty，将按年级推断：1-2→easy，3-4→medium，5-6→hard）。
+	- 返回：{ success, count, type, difficulty, data: [ { id, type, difficulty, expression, answer, options, userAnswer:null, isCorrect:null, timeSpent:0 } ] }。
+
+2) 判题提交：POST /api/problems/submit（需登录）
+	- Body：{ problems: [ { id, expression, type, difficulty, answer, userAnswer, timeSpent } ], totalTime? }。
+	- 说明：当前为简化实现，服务端按回传的原题字段判分（生产建议改为后端缓存/持久化校对）。
+
+3) 题型/难度元数据：GET /api/problems/options（需登录）。
+4) 年级推荐：GET /api/problems/recommendation/:grade（需登录）。
+
+六、可扩展建议
+- 将生成的题目持久化（题库/缓存）并改为“后端校对”，前端只需提交 id+userAnswer。
+- 增加练习记录/错题本（PracticeRecord），支持统计与回放。
+- 更细的难度梯度与更多混合运算结构（含括号/先后顺序变化）。
+

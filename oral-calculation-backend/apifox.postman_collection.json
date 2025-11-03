@@ -1,0 +1,192 @@
+{
+  "info": {
+    "_postman_id": "f2a2a7de-0e9c-4d65-bebf-oral-apifox-col",
+    "name": "Oral Calculation Backend (MySQL)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"alice01\",\n  \"email\": \"alice01@example.com\",\n  \"password\": \"passw0rd\",\n  \"role\": \"student\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api","auth","register"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200/201', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "var json = {}; try { json = pm.response.json(); } catch(e){}",
+                  "if (json && json.token) { pm.environment.set('token', json.token); }",
+                  "pm.test('success === true', function(){ pm.expect(json.success).to.eql(true); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alice01@example.com\",\n  \"password\": \"passw0rd\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "var json = {}; try { json = pm.response.json(); } catch(e){}",
+                  "pm.test('success === true', function(){ pm.expect(json.success).to.eql(true); });",
+                  "if (json && json.token) { pm.environment.set('token', json.token); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api","auth","me"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "var json = {}; try { json = pm.response.json(); } catch(e){}",
+                  "pm.test('success === true', function(){ pm.expect(json.success).to.eql(true); });",
+                  "pm.test('has user object', function(){ pm.expect(json).to.have.property('user'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Problems",
+      "item": [
+        {
+          "name": "Generate Problems",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/problems?type=mixed&difficulty=medium&count=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","problems"],
+              "query": [
+                {"key":"type","value":"mixed"},
+                {"key":"difficulty","value":"medium"},
+                {"key":"count","value":"5"}
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "var json = {}; try { json = pm.response.json(); } catch(e){}",
+                  "pm.test('success === true', function(){ pm.expect(json.success).to.eql(true); });",
+                  "pm.test('has data array', function(){ pm.expect(json).to.have.property('data'); pm.expect(json.data).to.be.an('array'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Submit Answers (auto-prepare 1 problem)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"problems\": [],\n  \"totalTime\": 0\n}" },
+            "url": { "raw": "{{baseUrl}}/api/problems/submit", "host": ["{{baseUrl}}"], "path": ["api","problems","submit"] }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const baseUrl = pm.environment.get('baseUrl') || pm.variables.get('baseUrl');",
+                  "const token = pm.environment.get('token');",
+                  "pm.sendRequest({",
+                  "  url: baseUrl + '/api/problems?type=addition&difficulty=easy&count=1',",
+                  "  method: 'GET',",
+                  "  header: { Authorization: 'Bearer ' + token }",
+                  "}, function (err, res) {",
+                  "  if (err) { console.log('pre-req error:', err); return; }",
+                  "  let data = {}; try { data = res.json(); } catch(e){}",
+                  "  const p = data && data.data && data.data[0];",
+                  "  if (p) {",
+                  "    const submit = { problems: [ Object.assign({}, p, { userAnswer: p.answer, timeSpent: 2 }) ], totalTime: 2 };",
+                  "    pm.request.body.update(JSON.stringify(submit));",
+                  "  }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "var json = {}; try { json = pm.response.json(); } catch(e){}",
+                  "pm.test('success === true', function(){ pm.expect(json.success).to.eql(true); });",
+                  "pm.test('has summary', function(){ pm.expect(json).to.have.property('summary'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Options",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/problems/options", "host": ["{{baseUrl}}"], "path": ["api","problems","options"] }
+          }
+        },
+        {
+          "name": "Recommendation (grade=2)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/problems/recommendation/2", "host": ["{{baseUrl}}"], "path": ["api","problems","recommendation","2"] }
+          }
+        }
+      ]
+    }
+  ]
+}

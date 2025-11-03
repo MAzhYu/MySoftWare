@@ -1,0 +1,322 @@
+//控制台输出
+PS D:\MySoftWare\oral-calculation-backend> node server.js
+[dotenv@17.2.3] injecting env (9) from .env -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+Server listening on port 5000, env: development
+MySQL connected: 127.0.0.1:3306
+
+//发送POST到/api/auth/register
+请求体JSON:
+{
+  "username": "alice02",
+  "email": "alice02@example.com",
+  "password": "passw0rd",
+  "role": "student"
+}
+响应JSON:
+{
+    "success": true,
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNzYyMTY4MDc0LCJleHAiOjE3NjI3NzI4NzR9.fUYKQzc1AoeAeqZSawoCqWIM9R0PobGPgcnBZ-QnUOk",
+    "user": {
+        "id": 2,
+        "username": "alice02",
+        "email": "alice02@example.com",
+        "role": "student",
+        "profile": {},
+        "learningProgress": {
+            "grade": "一年级",
+            "currentLevel": "基础",
+            "totalExercises": 0,
+            "correctAnswers": 0,
+            "averageAccuracy": 0,
+            "lastPracticeDate": null
+        },
+        "achievements": []
+    }
+}
+
+
+//发送POST到/api/auth/login
+请求体JSON:
+{
+  "email": "alice02@example.com",
+  "password": "passw0rd"
+}
+响应：
+{
+    "success": true,
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNzYyMTY4MDk3LCJleHAiOjE3NjI3NzI4OTd9.GpngIw8jrETbPOdhvhXmRKpjUrZGiTy__E5QTZIqrW4",
+    "user": {
+        "id": 2,
+        "username": "alice02",
+        "email": "alice02@example.com",
+        "role": "student",
+        "profile": {},
+        "learningProgress": {
+            "grade": "一年级",
+            "currentLevel": "基础",
+            "correctAnswers": 0,
+            "totalExercises": 0,
+            "averageAccuracy": 0,
+            "lastPracticeDate": null
+        },
+        "achievements": []
+    }
+}
+
+
+//发送GET到/api/auth/me
+响应：
+{
+    {
+    "success": true,
+    "user": {
+        "id": 2,
+        "username": "alice02",
+        "email": "alice02@example.com",
+        "role": "student",
+        "profile": {},
+        "learningProgress": {
+            "grade": "一年级",
+            "currentLevel": "基础",
+            "correctAnswers": 0,
+            "totalExercises": 0,
+            "averageAccuracy": 0,
+            "lastPracticeDate": null
+        },
+        "achievements": [],
+        "streak": 0,
+        "totalPracticeTime": 0,
+        "createdAt": "2025-11-03T11:07:54.000Z"
+    }
+}
+}
+
+//发送POST到/api/problems
+{
+    "success": true,
+    "count": 5,
+    "type": "mixed",
+    "difficulty": "medium",
+    "data": [
+        {
+            "id": "prob_1762169603678_8tfg637gy",
+            "type": "mixed",
+            "difficulty": "medium",
+            "expression": "9 ÷ 3 ÷ 2",
+            "answer": 1.5,
+            "options": [
+                1.5,
+                2.5,
+                -0.5,
+                3.5
+            ],
+            "userAnswer": null,
+            "isCorrect": null,
+            "timeSpent": 0
+        },
+        {
+            "id": "prob_1762169603678_zbcv23pe1",
+            "type": "mixed",
+            "difficulty": "medium",
+            "expression": "7 × 3 × 4",
+            "answer": 84,
+            "options": [
+                76,
+                93,
+                69,
+                84
+            ],
+            "userAnswer": null,
+            "isCorrect": null,
+            "timeSpent": 0
+        },
+        {
+            "id": "prob_1762169603678_t3nc7h8cl",
+            "type": "mixed",
+            "difficulty": "medium",
+            "expression": "24 × 6 ÷ 2",
+            "answer": 72,
+            "options": [
+                83,
+                72,
+                84,
+                74
+            ],
+            "userAnswer": null,
+            "isCorrect": null,
+            "timeSpent": 0
+        },
+        {
+            "id": "prob_1762169603678_a21mxpomg",
+            "type": "mixed",
+            "difficulty": "medium",
+            "expression": "32 ÷ 8 ÷ 4",
+            "answer": 1,
+            "options": [
+                3,
+                -1,
+                2,
+                1
+            ],
+            "userAnswer": null,
+            "isCorrect": null,
+            "timeSpent": 0
+        },
+        {
+            "id": "prob_1762169603678_770clrdyp",
+            "type": "mixed",
+            "difficulty": "medium",
+            "expression": "5 × 4 × 9",
+            "answer": 180,
+            "options": [
+                210,
+                149,
+                180,
+                182
+            ],
+            "userAnswer": null,
+            "isCorrect": null,
+            "timeSpent": 0
+        }
+    ]
+}
+
+//发送POST到 /api/problems/submit
+请求体JSON：
+{
+  "problems": [
+    {
+            "id": "prob_1762170187199_yijhxqmng",
+            "type": "mixed",
+            "difficulty": "medium",
+            "expression": "7 × 5 × 3",
+            "answer": 105,
+            "userAnswer": 1,
+            "timeSpent": 3
+    },
+    {
+            "id": "prob_1762170401615_29khewg0p",
+            "type": "mixed",
+            "difficulty": "medium",
+            "expression": "9 ÷ 3 ÷ 5",
+            "answer": 0.6,
+            "userAnswer": 0.6,
+            "timeSpent": 2
+    }
+  ],
+  "totalTime": 5
+}
+响应：
+{
+    "success": true,
+    "message": "Scored successfully",
+    "summary": {
+        "total": 2,
+        "correct": 1,
+        "accuracy": 50,
+        "totalTime": 5
+    },
+    "details": [
+        {
+            "id": "prob_1762170187199_yijhxqmng",
+            "expression": "7 × 5 × 3",
+            "type": "mixed",
+            "difficulty": "medium",
+            "correctAnswer": 105,
+            "userAnswer": 1,
+            "isCorrect": false,
+            "timeSpent": 3
+        },
+        {
+            "id": "prob_1762170401615_29khewg0p",
+            "expression": "9 ÷ 3 ÷ 5",
+            "type": "mixed",
+            "difficulty": "medium",
+            "correctAnswer": 0.6,
+            "userAnswer": 0.6,
+            "isCorrect": true,
+            "timeSpent": 2
+        }
+    ]
+}
+
+//发送GET到 /api/problems/options
+响应：
+{
+    "success": true,
+    "data": {
+        "types": [
+            {
+                "value": "addition",
+                "label": "Addition",
+                "description": "Basic addition up to grade level"
+            },
+            {
+                "value": "subtraction",
+                "label": "Subtraction",
+                "description": "Basic subtraction up to grade level"
+            },
+            {
+                "value": "multiplication",
+                "label": "Multiplication",
+                "description": "Multiplication facts and more"
+            },
+            {
+                "value": "division",
+                "label": "Division",
+                "description": "Division facts and more"
+            },
+            {
+                "value": "mixed",
+                "label": "Mixed",
+                "description": "Mixed operations"
+            },
+            {
+                "value": "comparison",
+                "label": "Comparison",
+                "description": "Compare numbers >, <, ="
+            },
+            {
+                "value": "fill_blank",
+                "label": "Fill in the blank",
+                "description": "Fill missing number/operator"
+            }
+        ],
+        "difficulties": [
+            {
+                "value": "easy",
+                "label": "Easy",
+                "description": "Suitable for grades 1-2",
+                "grade": "1-2"
+            },
+            {
+                "value": "medium",
+                "label": "Medium",
+                "description": "Suitable for grades 3-4",
+                "grade": "3-4"
+            },
+            {
+                "value": "hard",
+                "label": "Hard",
+                "description": "Suitable for grades 5-6",
+                "grade": "5-6"
+            }
+        ]
+    }
+}
+
+//发送POST到/api/problems/recommendation/2
+响应：
+{
+    "success": true,
+    "grade": 2,
+    "recommendation": {
+        "difficulty": "easy",
+        "recommendedTypes": [
+            "addition",
+            "subtraction",
+            "comparison"
+        ],
+        "description": "Grades 1-2: recommend addition/subtraction within 20 and comparisons"
+    }
+}

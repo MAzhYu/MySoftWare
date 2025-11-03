@@ -1,0 +1,157 @@
+Oral Calculation Backend (MySQL)
+API Endpoints (for Frontend Integration)
+
+Base URL
+- http://localhost:5000
+
+Auth
+- Authorization: Bearer YOUR_TOKEN (set this header for protected routes)
+- Obtain token from POST /api/auth/login or /api/auth/register
+
+Common Response Shape
+- Success: { success: true, ... }
+- Error:   { success: false, message: string, errors?: array }
+
+Status Codes
+- 200 OK / 201 Created
+- 400 Bad Request
+- 401 Unauthorized (missing/invalid token)
+- 403 Forbidden (role not allowed)
+- 404 Not Found
+- 500 Internal Server Error
+
+====================
+AUTH ROUTES (/api/auth)
+====================
+
+1) Register
+- Method: POST
+- URL: /api/auth/register
+- Body (JSON):
+  { "username": string(3-20), "email": string, "password": string(>=6), "role": "student"|"parent"|"teacher", "profile"?: object }
+- Response 201:
+  { success, token, user: { id, username, email, role, profile, learningProgress, achievements } }
+
+2) Login
+- Method: POST
+- URL: /api/auth/login
+- Body (JSON): { "email": string, "password": string }
+- Response 200:
+  { success, token, user: { ...same as above } }
+
+3) Me (Get current user)
+- Method: GET
+- URL: /api/auth/me
+- Headers: Authorization: Bearer YOUR_TOKEN
+- Response 200:
+  { success, user: { id, username, email, role, profile, learningProgress, achievements, streak, totalPracticeTime, createdAt } }
+
+4) Update Profile
+- Method: PUT
+- URL: /api/auth/profile
+- Headers: Authorization: Bearer YOUR_TOKEN
+- Body (JSON, optional fields): { username?, email?, profile? }
+- Notes: changing email sets emailVerified=false
+- Response 200:
+  { success, message: "Updated", user: { id, username, email, role, profile, learningProgress } }
+
+5) Bind Child (Parent)
+- Method: POST
+- URL: /api/auth/bind-child
+- Headers: Authorization: Bearer YOUR_TOKEN (role=parent)
+- Body (JSON): { childUsername: string, relationship: "son"|"daughter" }
+- Response 200:
+  { success, message: "Binding created, waiting for student confirmation", pendingVerification: true }
+
+6) Confirm Parent (Student)
+- Method: POST
+- URL: /api/auth/confirm-parent
+- Headers: Authorization: Bearer YOUR_TOKEN (role=student)
+- Body (JSON): { parentUserId: number }
+- Response 200: { success, message: "Confirmed" }
+
+7) Children Progress (Parent)
+- Method: GET
+- URL: /api/auth/children-progress
+- Headers: Authorization: Bearer YOUR_TOKEN (role=parent)
+- Response 200:
+  { success, count, data: [ { relationship, child } ] }
+  where child has fields: { id, username, profile, learningProgress, achievements, streak, totalPracticeTime }
+
+8) Update Learning Progress (Student)
+- Method: POST
+- URL: /api/auth/update-progress
+- Headers: Authorization: Bearer YOUR_TOKEN
+- Body (JSON): { correct: int>=0, total: int>=1, practiceTime: int>=0 }
+- Response 200: { success, message: "Updated", progress: learningProgress }
+
+====================
+PROBLEM ROUTES (/api/problems)
+====================
+
+Notes
+- All routes require Authorization header (unless you add a public endpoint).
+- Problem expressions use display operators: × and ÷. For computation, normalize to * and / if needed.
+
+1) Generate Problems
+- Method: GET
+- URL: /api/problems
+- Headers: Authorization: Bearer YOUR_TOKEN
+- Query:
+  - type: addition|subtraction|multiplication|division|mixed|comparison|fill_blank
+  - difficulty: easy|medium|hard
+  - count: integer (max 50)
+  - grade?: integer 1..6 (if provided and difficulty omitted, difficulty is inferred)
+- Response 200:
+  { success, count, type, difficulty, data: [ Problem ] }
+- Problem:
+  { id, type, difficulty, expression, answer, options, userAnswer: null, isCorrect: null, timeSpent: 0 }
+
+2) Submit Answers
+- Method: POST
+- URL: /api/problems/submit
+- Headers: Authorization: Bearer YOUR_TOKEN
+- Body (JSON):
+  { "problems": [ { id, expression, type, difficulty, answer, userAnswer, timeSpent } ], "totalTime": number }
+- Notes: simplified scoring expects the original problem fields from Generate Problems to be included.
+- Response 200:
+  { success, message: "Scored successfully", summary: { total, correct, accuracy, totalTime }, details: [ { id, expression, type, difficulty, correctAnswer, userAnswer, isCorrect, timeSpent } ] }
+
+3) Options
+- Method: GET
+- URL: /api/problems/options
+- Headers: Authorization: Bearer YOUR_TOKEN
+- Response 200:
+  { success, data: { types: [ { value, label, description } ], difficulties: [ { value, label, description, grade } ] } }
+
+4) Grade Recommendation
+- Method: GET
+- URL: /api/problems/recommendation/:grade
+- Headers: Authorization: Bearer YOUR_TOKEN
+- Params: grade in [1..6]
+- Response 200:
+  { success, grade, recommendation: { difficulty, recommendedTypes: string[], description } }
+
+====================
+HEALTH
+====================
+
+1) Health Check
+- Method: GET
+- URL: /api/health
+- Response 200:
+  { success: true, message: "Service healthy", services: { auth: "ok", problems: "ok", database: "ok" }, timestamp }
+
+====================
+ERROR EXAMPLES
+====================
+- 401 Missing token
+  { success: false, message: "Authorization credentials not provided" }
+- 401 Invalid token
+  { success: false, message: "Invalid token" }
+- 403 Role not authorized
+  { success: false, message: "Role <role> is not authorized to perform this action" }
+- 400 Validation failed
+  { success: false, message: "Validation failed", errors: [...] }
+
+End of file.
