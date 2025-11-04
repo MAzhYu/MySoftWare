@@ -5,7 +5,8 @@ export const api = {
   login: `${BASE_URL}/api/auth/login`,
   me: `${BASE_URL}/api/auth/me`,
   register: `${BASE_URL}/api/auth/register`,
-  problems: `${BASE_URL}/api/problems`
+  problems: `${BASE_URL}/api/problems`,
+  profile: `${BASE_URL}/api/auth/profile`
 }
 
 export function request({ url, method = 'GET', data = {}, auth = false, headers = {} }) {

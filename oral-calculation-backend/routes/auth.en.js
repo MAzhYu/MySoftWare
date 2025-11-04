@@ -119,6 +119,7 @@ router.get('/me', protect, async (req, res) => {
 });
 
 // update profile
+// update profile（支持修改年级）
 router.put('/profile', protect, [
   body('username').optional().isLength({ min: 3, max: 20 }),
   body('email').optional().isEmail()
@@ -127,11 +128,32 @@ router.put('/profile', protect, [
     const errors = validationResult(req);
     if (!errors.isEmpty()) return sendValidationFailed(res, errors);
 
-    const updateFields = {}; ['username','email','profile'].forEach(f => { if (req.body[f] !== undefined) updateFields[f] = req.body[f]; });
-    if (updateFields.email && updateFields.email !== req.user.email) updateFields.emailVerified = false;
+    const updateFields = {};
+
+    ['username', 'email', 'profile', 'learningProgress'].forEach(f => {
+      if (req.body[f] !== undefined) updateFields[f] = req.body[f];
+    });
+    if (updateFields.email && updateFields.email !== req.user.email)
+      updateFields.emailVerified = false;
+
+    // ✅ 更新用户数据
     Object.assign(req.user, updateFields);
     await req.user.save();
-    res.status(200).json({ success: true, message: 'Updated', user: { id: req.user.id, username: req.user.username, email: req.user.email, role: req.user.role, profile: req.user.profile, learningProgress: req.user.learningProgress } });
+
+    // ✅ 返回更新后的数据
+    res.status(200).json({
+      success: true,
+      message: 'Updated',
+      user: {
+        id: req.user.id,
+        username: req.user.username,
+        email: req.user.email,
+        role: req.user.role,
+        profile: req.user.profile,
+        learningProgress: req.user.learningProgress,
+        achievements: req.user.achievements
+      }
+    });
   } catch (error) {
     console.error('Update profile error:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });

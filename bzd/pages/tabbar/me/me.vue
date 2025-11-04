@@ -2,13 +2,13 @@
   <view class="container">
     <!-- 顶部标题 -->
     <view class="header">
-      <image src="/static/icons/user.png" class="avatar" />
+      <image src="/static/icons/login.png" class="avatar" />
       <text class="title">我的账户</text>
     </view>
 
     <!-- 未登录状态 -->
     <view v-if="!user" class="login-card">
-      <text class="login-title">请登录以同步学习进度</text>
+      <text class="login-title">🦌马神口算</text>
 
       <input
         v-model="email"
@@ -24,31 +24,75 @@
       />
 
       <button class="login-btn" @click="login">登录</button>
-      <text class="register-tip">没有账号？请联系老师或家长注册</text>
+      <view class="register-tip">
+        <text>还没有账号？</text>
+        <text class="link" @click="goRegister">立即注册</text>
+      </view>
     </view>
 
     <!-- 已登录状态 -->
     <view v-else class="profile-card">
       <view class="user-info">
-        <image src="/static/icons/avatar.png" class="profile-avatar" />
+        <image src="/static/icons/c.png" class="profile-avatar" />
+<!--        <view class="avatar-wrapper" @click="chooseAvatar">
+          <image
+            :src="user.profile?.avatar || '/static/icons/default-avatar.png'"
+            class="profile-avatar"
+          />
+          <text class="edit-avatar">更改头像</text>
+        </view> -->
         <view class="info-text">
           <text class="name">{{ user.username }}</text>
           <text class="email">{{ user.email }}</text>
           <text class="role">角色：{{ roleName(user.role) }}</text>
         </view>
       </view>
-
+      <view class="grade-picker">
+        <text class="picker-label">当前年级：</text>
+        <picker :range="grades" :value="gradeIndex" @change="onGradeChange">
+          <view class="picker-box">
+            {{ grades[gradeIndex] || '未设置' }}
+          </view>
+        </picker>
+      </view>
       <view class="progress">
         <text class="section-title">学习进度</text>
         <view class="progress-item">
-          <text>年级：{{ user.learningProgress?.grade || '未设置' }}</text>
           <text>正确率：{{ user.learningProgress?.averageAccuracy || 0 }}%</text>
           <text>练习总数：{{ user.learningProgress?.totalExercises || 0 }}</text>
         </view>
       </view>
-
+	  <button class="edit-btn" @click="openEditModal">修改信息</button>
       <button class="logout-btn" @click="logout">退出登录</button>
     </view>
+	
+	<view v-if="showEditModal" class="modal-mask" @click="closeModal">
+      <view class="modal" @click.stop>
+        <text class="modal-title">修改个人信息</text>
+
+        <input
+          v-model="editData.username"
+          class="modal-input"
+          placeholder="修改姓名"
+        />
+        <input
+          v-model="editData.email"
+          class="modal-input"
+          placeholder="修改邮箱"
+        />
+
+        <picker :range="grades" :value="editGradeIndex" @change="onEditGradeChange">
+          <view class="modal-picker">
+            年级：{{ grades[editGradeIndex] || '未设置' }}
+          </view>
+        </picker>
+
+        <view class="modal-actions">
+          <button class="cancel-btn" @click="closeModal">取消</button>
+          <button class="confirm-btn" @click="submitEdit">保存</button>
+        </view>
+      </view>
+	</view>
   </view>
 </template>
 
@@ -60,7 +104,12 @@ export default {
     return {
       email: '',
       password: '',
-      user: null
+      user: null,
+      grades: ['一年级', '二年级', '三年级', '四年级', '五年级', '六年级'],
+      gradeIndex: 0,
+	  showEditModal: false,
+      editData: { username: '', email: '', grade: '' },
+      editGradeIndex: 0
     }
   },
   onShow() {
@@ -80,10 +129,10 @@ export default {
           data: { email: this.email, password: this.password }
         })
         uni.setStorageSync('token', res.token)
-        uni.showToast({ title: '登录成功' })
+        uni.showToast({ title: '登录成功',image: "/static/icons/success.png" })
         await this.loadUser()
       } catch (err) {
-        uni.showToast({ title: '登录失败，请检查账号或网络', icon: 'none' })
+        uni.showToast({ title: '登录失败，请检查账号或网络', icon: 'none',image: "/static/icons/fail.png" })
       } finally {
         uni.hideLoading()
       }
@@ -107,13 +156,90 @@ export default {
         this.user = null
       }
     },
+	async onGradeChange(e) {
+	      this.gradeIndex = e.detail.value
+	      const newGrade = this.grades[this.gradeIndex]
+	      if (!this.user) return
+	
+	      // 更新前端显示
+	      this.user.learningProgress.grade = newGrade
+	
+	      try {
+	        uni.showLoading({ title: '保存中...' })
+	        const res = await request({
+	          url: api.profile,
+	          method: 'PUT',
+	          auth: true,
+	          data: {
+	            learningProgress: this.user.learningProgress
+	          }
+	        })
+	        if (res.success) {
+	          uni.showToast({ title: '年级已更新', image: "/static/icons/success.png" })
+	        } else {
+	          uni.showToast({ title: '保存失败', icon: 'none' })
+	        }
+	      } catch (err) {
+			  console.error('请求出错:', err)
+	        uni.showToast({ title: '请求出错', icon: 'none' ,image: "/static/icons/fail.png"})
+	      } finally {
+	        uni.hideLoading()
+	      }
+	    },
+    openEditModal() {
+      this.editData.username = this.user.username
+      this.editData.email = this.user.email
+      this.editGradeIndex = this.grades.indexOf(this.user.learningProgress?.grade || '') || 0
+      this.showEditModal = true
+    },
+    closeModal() {
+      this.showEditModal = false
+    },
+    onEditGradeChange(e) {
+      this.editGradeIndex = e.detail.value
+    },
 
+    // 提交修改
+    async submitEdit() {
+      uni.showLoading({ title: '保存中...' })
+      try {
+        const res = await request({
+          url: api.profile,
+          method: 'PUT',
+          auth: true,
+          data: {
+            username: this.editData.username,
+            email: this.editData.email,
+            learningProgress: {
+              grade: this.grades[this.editGradeIndex]
+            }
+          }
+        })
+        if (res.success) {
+          uni.showToast({ title: '修改成功', image: '/static/icons/success.png' })
+          this.showEditModal = false
+          await this.loadUser()
+        } else {
+          uni.showToast({ title: '修改失败', icon: 'none' })
+        }
+      } catch (err) {
+        console.error(err)
+        uni.showToast({ title: '请求出错', icon: 'none', image: '/static/icons/fail.png' })
+      } finally {
+        uni.hideLoading()
+      }
+    },
     logout() {
       uni.removeStorageSync('token')
       this.user = null
-      uni.showToast({ title: '已退出登录' })
+      uni.showToast({ title: '已退出登录' ,image: "/static/icons/success.png"})
     },
-
+    goRegister() {
+      // ✅ 跳转到注册页面
+      uni.navigateTo({
+        url: '/pages/register/register'
+      })
+    },
     roleName(role) {
       switch (role) {
         case 'student':
@@ -170,12 +296,14 @@ export default {
   text-align: center;
 }
 .login-title {
+  display: block;
   font-size: 32rpx;
   color: #00496e;
-  margin-bottom: 30rpx;
+  margin-bottom: 40rpx;
+  padding-bottom: 30rpx;
 }
 .input-box {
-  width: 100%;
+  width: 94%;
   border: 1px solid #ccc;
   border-radius: 30rpx;
   padding: 20rpx;
@@ -237,7 +365,25 @@ export default {
   color: #20d0b0;
   margin-top: 5rpx;
 }
-
+.grade-picker {
+  margin-top: 40rpx;
+  display: flex;
+  align-items: center;
+}
+.picker-label {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #00496e;
+  margin-right: 20rpx;
+}
+.picker-box {
+  flex: 1;
+  border: 1px solid #ccc;
+  border-radius: 20rpx;
+  padding: 16rpx 20rpx;
+  background-color: #f9f9f9;
+  color: #333;
+}
 /* 进度卡片 */
 .progress {
   margin-top: 40rpx;
@@ -269,5 +415,87 @@ export default {
   border: none;
   border-radius: 30rpx;
   padding: 20rpx 0;
+}
+.register-tip {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 30rpx;
+  font-size: 26rpx;
+  color: #666;
+}
+.link {
+  color: #20d0b0;
+  margin-left: 10rpx;
+}
+.edit-btn {
+  margin-top: 40rpx;
+  width: 100%;
+  background-color: #20a0ff;
+  color: white;
+  font-size: 30rpx;
+  border: none;
+  border-radius: 30rpx;
+  padding: 20rpx 0;
+}
+
+/* 模态框样式 */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal {
+  background: white;
+  width: 80%;
+  border-radius: 20rpx;
+  padding: 40rpx;
+  box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.2);
+}
+.modal-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #00496e;
+  text-align: center;
+  margin-bottom: 30rpx;
+}
+.modal-input {
+  border: 1px solid #ccc;
+  border-radius: 20rpx;
+  padding: 20rpx;
+  margin-bottom: 25rpx;
+  font-size: 28rpx;
+  background-color: #f9f9f9;
+}
+.modal-picker {
+  text-align: center;
+  font-size: 28rpx;
+  background: #f9f9f9;
+  border-radius: 20rpx;
+  padding: 20rpx;
+  margin-bottom: 25rpx;
+}
+.modal-actions {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 30rpx;
+}
+.cancel-btn {
+  background-color: #ccc;
+  color: #fff;
+  border-radius: 20rpx;
+  padding: 15rpx 40rpx;
+}
+.confirm-btn {
+  background-color: #20d0b0;
+  color: #fff;
+  border-radius: 20rpx;
+  padding: 15rpx 40rpx;
 }
 </style>
