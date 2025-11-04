@@ -7,7 +7,11 @@
     </view>
 
     <!-- 聊天记录 -->
-    <scroll-view scroll-y class="chat-box" :scroll-into-view="scrollToId">
+    <scroll-view
+      scroll-y
+      class="chat-box"
+      :scroll-into-view="scrollToId"
+    >
       <view
         v-for="(msg, index) in messages"
         :key="index"
@@ -24,23 +28,37 @@
       </view>
     </scroll-view>
 
-    <!-- 快捷建议 -->
-    <view class="quick-ask">
-      <button v-for="(q, i) in quickQuestions" :key="i" @click="sendQuick(q)">
-        {{ q }}
-      </button>
-    </view>
-
-    <!-- 输入区 -->
-    <view class="input-area">
-      <input
-        v-model="inputText"
-        class="chat-input"
-        placeholder="请输入问题，例如：帮我出10道三年级加减法题"
-        confirm-type="send"
-        @confirm="sendMessage"
-      />
-      <button class="send-btn" @click="sendMessage">发送</button>
+    <!-- 底部区域（快捷提问 + 输入） -->
+    <view class="bottom-box">
+      <!-- 快捷提问区 -->
+      <scroll-view
+        scroll-x
+        class="quick-ask"
+        show-scrollbar="false"
+      >
+        <view class="quick-row">
+          <button
+            v-for="(q, i) in quickQuestions"
+            :key="i"
+            class="quick-btn"
+            @click="sendQuick(q)"
+          >
+            {{ q }}
+          </button>
+        </view>
+      </scroll-view>
+    
+      <!-- 输入框 -->
+      <view class="input-area">
+        <input
+          v-model="inputText"
+          class="chat-input"
+          placeholder="请输入问题，例如：帮我出10道三年级加减法题"
+          confirm-type="send"
+          @confirm="sendMessage"
+        />
+        <button class="send-btn" @click="sendMessage">发送</button>
+      </view>
     </view>
   </view>
 </template>
@@ -65,33 +83,23 @@ export default {
   methods: {
     async sendMessage() {
       if (!this.inputText.trim()) return
-
       const userMsg = { role: 'user', text: this.inputText }
       this.messages.push(userMsg)
       this.inputText = ''
 
-      // 滚动到最新
       this.$nextTick(() => {
         this.scrollToId = 'msg' + (this.messages.length - 1)
       })
 
-      // 模拟AI回复（你后续可以接入后端接口）
-      this.messages.push({
-        role: 'ai',
-        text: '正在思考中，请稍等……'
-      })
+      this.messages.push({ role: 'ai', text: '正在思考中，请稍等……' })
 
-      // 调用后端接口（可替换为真实AI接口）
       try {
-        // 示例：请求你的后端 AI 接口（需要在 oral-calculation-backend 实现 /api/ai/ask）
         const res = await request({
           url: 'http://localhost:5000/api/ai/ask',
           method: 'POST',
           data: { prompt: userMsg.text },
           auth: true
         })
-
-        // 更新AI回复
         this.messages.splice(this.messages.length - 1, 1, {
           role: 'ai',
           text: res.reply || '（AI助手）暂时无法回答这个问题，请稍后重试。'
@@ -103,12 +111,10 @@ export default {
         })
       }
 
-      // 滚动到最新
       this.$nextTick(() => {
         this.scrollToId = 'msg' + (this.messages.length - 1)
       })
     },
-
     sendQuick(text) {
       this.inputText = text
       this.sendMessage()
@@ -123,6 +129,7 @@ export default {
   flex-direction: column;
   height: 100vh;
   background-color: #f7f8fa;
+  position: relative;
 }
 
 /* 顶部标题 */
@@ -150,6 +157,9 @@ export default {
   padding: 30rpx;
   background-color: #f1f2f6;
   overflow-y: auto;
+  box-sizing: border-box;
+  /* 留出底部空间防止被输入区遮住 */
+  margin-bottom: 260rpx;
 }
 .message {
   display: flex;
@@ -184,15 +194,35 @@ export default {
   border-bottom-left-radius: 0;
 }
 
-/* 快捷提问区 */
-.quick-ask {
-  display: flex;
-  flex-wrap: nowrap;
-  overflow-x: scroll;
+/* 底部整体区域（固定） */
+/* 底部整体区域（固定） */
+.bottom-box {
+  position: fixed;
+  bottom: var(--window-bottom);
+  left: 0;
+  width: 100%;
   background-color: #fff;
-  padding: 20rpx 10rpx;
+  box-shadow: 0 -4rpx 8rpx rgba(0, 0, 0, 0.05);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
 }
-.quick-ask button {
+
+/* 横向滚动快捷提问区 */
+.quick-ask {
+  width: 100%;
+  overflow-x: scroll;
+  white-space: nowrap;
+  background-color: #fff;
+  padding: 15rpx 10rpx;
+  border-top: 1px solid #eee;
+}
+.quick-row {
+  display: flex;
+  flex-direction: row;
+}
+.quick-btn {
   flex-shrink: 0;
   margin: 0 10rpx;
   background-color: #e6f9f5;
@@ -201,15 +231,16 @@ export default {
   padding: 10rpx 25rpx;
   font-size: 26rpx;
   border: none;
+  white-space: nowrap; /* 避免按钮文字换行 */
 }
 
-/* 底部输入区 */
+/* 输入框 */
 .input-area {
   display: flex;
   align-items: center;
   background-color: #fff;
   border-top: 1px solid #eee;
-  padding: 10rpx 20rpx;
+  padding: 10rpx 20rpx 20rpx;
 }
 .chat-input {
   flex: 1;
@@ -230,4 +261,5 @@ export default {
   font-size: 28rpx;
   margin-left: 15rpx;
 }
+
 </style>
