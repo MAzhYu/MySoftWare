@@ -8,7 +8,10 @@ export const api = {
   problems: `${BASE_URL}/api/problems`,
   problemsSubmit: `${BASE_URL}/api/problems/submit`,
   wrongProblems: `${BASE_URL}/api/problems/wrong`,
-  profile: `${BASE_URL}/api/auth/profile`
+  profile: `${BASE_URL}/api/auth/profile`,
+  aiStatus: `${BASE_URL}/api/ai/status`,
+  aiChat: `${BASE_URL}/api/ai/chat`,
+  aiExplain: `${BASE_URL}/api/ai/explain`
 }
 
 export function request({ url, method = 'GET', data = {}, auth = false, headers = {} }) {

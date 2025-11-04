@@ -130,15 +130,31 @@ router.put('/profile', protect, [
 
     const updateFields = {};
 
-    ['username', 'email', 'profile', 'learningProgress'].forEach(f => {
+    // Basic scalar fields
+    ['username', 'email', 'profile'].forEach(f => {
       if (req.body[f] !== undefined) updateFields[f] = req.body[f];
     });
     if (updateFields.email && updateFields.email !== req.user.email)
       updateFields.emailVerified = false;
 
+    // Merge learningProgress instead of overwriting the whole JSON
+    if (req.body.learningProgress !== undefined) {
+      const current = req.user.learningProgress || {
+        grade: '一年级',
+        currentLevel: '基础',
+        totalExercises: 0,
+        correctAnswers: 0,
+        averageAccuracy: 0,
+        lastPracticeDate: null
+      };
+      const merged = { ...current, ...req.body.learningProgress };
+      req.user.set('learningProgress', merged);
+      req.user.changed('learningProgress', true);
+    }
+
     // ✅ 更新用户数据
     Object.assign(req.user, updateFields);
-    await req.user.save();
+    await req.user.save({ fields: ['username','email','emailVerified','profile','learningProgress'] });
 
     // ✅ 返回更新后的数据
     res.status(200).json({

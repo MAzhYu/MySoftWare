@@ -4,7 +4,7 @@
 
 - 基于 Express + MySQL 的口算练习后端。
 - 功能：用户注册/登录（JWT）、题目生成（加/减/乘/除/混合/比较/填空，支持难度/数量）、学习进度统计与家长-孩子关系管理。
-- 主要路由：/api/auth, /api/problems, /api/health。
+- 主要路由：/api/auth, /api/problems, /api/ai, /api/health。
 
 环境要求
 
@@ -33,6 +33,24 @@ MYSQL_PORT=3306
 MYSQL_DATABASE=oral_calc
 MYSQL_USER=root
 MYSQL_PASSWORD=your_password
+
+# AI（可选，按需启用其一）
+# 方案一：OpenAI
+# AI_PROVIDER=openai
+# OPENAI_API_KEY=sk-***
+# AI_MODEL=gpt-4o-mini
+
+# 方案二：Azure OpenAI
+# AI_PROVIDER=azure-openai
+# AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
+# AZURE_OPENAI_API_KEY=***
+# AZURE_OPENAI_DEPLOYMENT=gpt-4o-mini
+# AZURE_OPENAI_API_VERSION=2024-08-01-preview
+
+# 方案三：DeepSeek
+# AI_PROVIDER=deepseek
+# DEEPSEEK_API_KEY=sk-***
+# AI_MODEL=deepseek-chat  # 或设置 DEEPSEEK_MODEL
 ```
 
 1. 在 MySQL 中创建数据库（若不存在）：
@@ -58,6 +76,8 @@ CREATE DATABASE oral_calc CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
    - GET /api/problems?type=addition&difficulty=easy&count=10
    - POST /api/problems/submit
    - GET /api/auth/me
+   - POST /api/ai/chat （body: { prompt: "用一句话赞美数学" }）
+   - POST /api/ai/explain （body: { expression, correctAnswer, userAnswer, grade? }）
 
 用 Apifox 一键验证（推荐）
 
@@ -80,6 +100,7 @@ MYSQL_PASSWORD=YourStrongP@ss
 
 - 启动时报错 ER_ACCESS_DENIED_ERROR：检查 .env 中的 MYSQL_USER/MYSQL_PASSWORD。
 - 表未创建：确认 .env 已配置且首次启动日志显示 MySQL connected，必要时删除数据库后重试。
+- AI 提示 501 Not Implemented：说明未配置 API Key。按上文 .env 示例设置对应环境变量后重启。
 
 许可证
 

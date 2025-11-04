@@ -171,12 +171,15 @@ router.post('/submit', [
       const user = await User.findByPk(req.user.id);
       if (user) {
         await user.updateLearningProgress(correctCount, totalCount, totalTime);
+        // Fetch persisted values to be extra sure
+        const fresh = await User.findByPk(user.id, { attributes: ['id','learningProgress','totalPracticeTime'] });
         console.log('Learning progress updated successfully:', {
-          userId: user.id,
-          totalExercises: user.learningProgress.totalExercises,
-          correctAnswers: user.learningProgress.correctAnswers,
-          averageAccuracy: user.learningProgress.averageAccuracy
+          userId: fresh.id,
+          totalExercises: fresh.learningProgress?.totalExercises,
+          correctAnswers: fresh.learningProgress?.correctAnswers,
+          averageAccuracy: fresh.learningProgress?.averageAccuracy
         });
+        req.updatedProgress = fresh; // stash for response
       }
     } catch (progressError) {
       console.error('Error updating learning progress:', progressError);
@@ -193,7 +196,9 @@ router.post('/submit', [
         accuracy: parseFloat(accuracy),
         totalTime: totalTime
       },
-      details: results
+      details: results,
+      currentProgress: req.updatedProgress ? req.updatedProgress.learningProgress : undefined,
+      totalPracticeTime: req.updatedProgress ? req.updatedProgress.totalPracticeTime : undefined
     });
   } catch (error) {
     console.error('Submit problems error:', error);

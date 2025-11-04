@@ -44,7 +44,22 @@
       <scroll-view scroll-y class="question-area">
         <view v-for="(q, index) in questions" :key="index" class="question-card">
           <text class="question-text">{{ index + 1 }}. {{ q.question }}</text>
+
+          <!-- 比大小题：提供 > / < / = 选项，不用填空 -->
+          <view v-if="q.type === 'comparison'" class="option-group">
+            <view
+              v-for="opt in (q.options || ['>','<','='])"
+              :key="opt"
+              :class="['option-item', q.answer === opt ? 'selected' : '']"
+              @click="q.answer = opt"
+            >
+              {{ opt }}
+            </view>
+          </view>
+
+          <!-- 其他题型：保留输入框 -->
           <input
+            v-else
             v-model="q.answer"
             type="text"
             class="answer-input"
@@ -288,7 +303,8 @@ export default {
           // 转换后端返回的数据格式为前端需要的格式
           this.questions = res.data.map(p => ({
             id: p.id,
-            question: p.expression + ' =',
+            // 比大小题不加等号，显示为 "a ? b"
+            question: p.type === 'comparison' ? p.expression : p.expression + ' =',
             answer: '',
             correctAnswer: p.answer,
             type: p.type,
@@ -606,6 +622,28 @@ saveProgress(isUnfinished) {
   padding: 0 20rpx;
   font-size: 30rpx;
   color: #00496e;
+}
+
+/* 比大小题的选项样式 */
+.option-group {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-top: 10rpx;
+}
+.option-item {
+  min-width: 120rpx;
+  text-align: center;
+  padding: 16rpx 24rpx;
+  border: 2rpx solid #20d0b0;
+  border-radius: 12rpx;
+  color: #00496e;
+  background-color: #fff;
+}
+.option-item.selected {
+  background-color: #20d0b0;
+  color: #fff;
+  border-color: #20d0b0;
 }
 
 /* 底部按钮 */

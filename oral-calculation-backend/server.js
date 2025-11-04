@@ -26,6 +26,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/auth', require('./routes/auth.en'));
 app.use('/api/problems', require('./routes/problems')); // math problems
+app.use('/api/ai', require('./routes/ai')); // AI assistant
 
 // Health check
 app.get('/api/health', (req, res) => {
