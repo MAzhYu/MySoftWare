@@ -8,6 +8,7 @@ dotenv.config();
 // DB connection
 const { connectDB } = require('./config/database.mysql');
 require('./models/User.mysql');
+require('./models/WrongProblem.mysql');
 connectDB();
 
 const app = express();

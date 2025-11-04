@@ -6,6 +6,8 @@ export const api = {
   me: `${BASE_URL}/api/auth/me`,
   register: `${BASE_URL}/api/auth/register`,
   problems: `${BASE_URL}/api/problems`,
+  problemsSubmit: `${BASE_URL}/api/problems/submit`,
+  wrongProblems: `${BASE_URL}/api/problems/wrong`,
   profile: `${BASE_URL}/api/auth/profile`
 }
 

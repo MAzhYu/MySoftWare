@@ -1,6 +1,8 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const ProblemService = require('../services/ProblemService');
+const WrongProblem = require('../models/WrongProblem.mysql');
+const User = require('../models/User.mysql');
 const { protect } = require('../middleware/auth');
 
 const router = express.Router();
@@ -80,7 +82,9 @@ router.post('/submit', [
   body('problems').isArray().withMessage('problems must be an array'),
   body('problems.*.id').notEmpty().withMessage('problem id is required'),
   body('problems.*.userAnswer').notEmpty().withMessage('userAnswer is required'),
-  body('problems.*.timeSpent').isNumeric().withMessage('timeSpent must be a number')
+  body('problems.*.timeSpent').isNumeric().withMessage('timeSpent must be a number'),
+  body('grade').optional().isInt({ min: 1, max: 6 }),
+  body('module').optional().isString()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -92,12 +96,11 @@ router.post('/submit', [
       });
     }
 
-    const { problems: submittedProblems, totalTime = 0 } = req.body;
+    const { problems: submittedProblems, totalTime = 0, grade, module } = req.body;
+    const userId = req.user.id;
 
     // Score problems
     const results = submittedProblems.map(submitted => {
-      // In production we should fetch original problem from DB/cache
-      // For simplicity we trust client-submitted original problem fields here
       const isCorrect = problemService.validateAnswer(submitted, submitted.userAnswer);
       
       return {
@@ -112,17 +115,73 @@ router.post('/submit', [
       };
     });
 
+    // Save wrong problems to database
+    const wrongProblems = results.filter(r => !r.isCorrect);
+    
+    if (wrongProblems.length > 0) {
+      for (const problem of wrongProblems) {
+        try {
+          // Check if this problem already exists for this user
+          const existing = await WrongProblem.findOne({
+            where: {
+              userId: userId,
+              expression: problem.expression,
+              isMastered: false
+            }
+          });
+
+          if (existing) {
+            // Update wrong count and last attempt date
+            await existing.update({
+              wrongCount: existing.wrongCount + 1,
+              lastAttemptDate: new Date(),
+              userAnswer: problem.userAnswer
+            });
+          } else {
+            // Create new wrong problem record
+            await WrongProblem.create({
+              userId: userId,
+              expression: problem.expression,
+              type: problem.type,
+              difficulty: problem.difficulty,
+              correctAnswer: problem.correctAnswer,
+              userAnswer: problem.userAnswer,
+              grade: grade,
+              module: module,
+              wrongCount: 1,
+              isMastered: false,
+              lastAttemptDate: new Date()
+            });
+          }
+        } catch (dbError) {
+          console.error('Error saving wrong problem:', dbError);
+          // Continue with other problems even if one fails
+        }
+      }
+    }
+
     // Summary
     const correctCount = results.filter(r => r.isCorrect).length;
     const totalCount = results.length;
     const accuracy = totalCount > 0 ? (correctCount / totalCount * 100).toFixed(1) : 0;
 
-    // Optional: update user progress via another API in real app
-    const updatePayload = {
-      correct: correctCount,
-      total: totalCount,
-      practiceTime: totalTime
-    };
+    // Update user learning progress
+    try {
+      // Reload user from database to ensure we have the full instance with methods
+      const user = await User.findByPk(req.user.id);
+      if (user) {
+        await user.updateLearningProgress(correctCount, totalCount, totalTime);
+        console.log('Learning progress updated successfully:', {
+          userId: user.id,
+          totalExercises: user.learningProgress.totalExercises,
+          correctAnswers: user.learningProgress.correctAnswers,
+          averageAccuracy: user.learningProgress.averageAccuracy
+        });
+      }
+    } catch (progressError) {
+      console.error('Error updating learning progress:', progressError);
+      // Continue even if progress update fails
+    }
 
     res.status(200).json({
       success: true,
@@ -130,6 +189,7 @@ router.post('/submit', [
       summary: {
         total: totalCount,
         correct: correctCount,
+        wrong: wrongProblems.length,
         accuracy: parseFloat(accuracy),
         totalTime: totalTime
       },
@@ -221,6 +281,118 @@ router.get('/recommendation/:grade', protect, (req, res) => {
     });
   } catch (error) {
     console.error('Get recommendation error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal error'
+    });
+  }
+});
+
+// Get user's wrong problems (错题集)
+router.get('/wrong', protect, async (req, res) => {
+  try {
+    const { 
+      type,
+      difficulty,
+      isMastered = false,
+      limit = 50,
+      offset = 0
+    } = req.query;
+
+    const where = {
+      userId: req.user.id,
+      isMastered: isMastered === 'true'
+    };
+
+    if (type) where.type = type;
+    if (difficulty) where.difficulty = difficulty;
+
+    const wrongProblems = await WrongProblem.findAll({
+      where,
+      order: [['lastAttemptDate', 'DESC']],
+      limit: Math.min(parseInt(limit), 100),
+      offset: parseInt(offset)
+    });
+
+    const total = await WrongProblem.count({ where });
+
+    res.status(200).json({
+      success: true,
+      count: wrongProblems.length,
+      total: total,
+      data: wrongProblems
+    });
+  } catch (error) {
+    console.error('Get wrong problems error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal error, failed to get wrong problems'
+    });
+  }
+});
+
+// Mark wrong problem as mastered
+router.put('/wrong/:id/master', protect, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const wrongProblem = await WrongProblem.findOne({
+      where: {
+        id: id,
+        userId: req.user.id
+      }
+    });
+
+    if (!wrongProblem) {
+      return res.status(404).json({
+        success: false,
+        message: 'Wrong problem not found'
+      });
+    }
+
+    await wrongProblem.update({ isMastered: true });
+
+    res.status(200).json({
+      success: true,
+      message: 'Marked as mastered',
+      data: wrongProblem
+    });
+  } catch (error) {
+    console.error('Update wrong problem error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal error'
+    });
+  }
+});
+
+// Delete wrong problem
+router.delete('/wrong/:id', protect, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const wrongProblem = await WrongProblem.findOne({
+      where: {
+        id: id,
+        userId: req.user.id
+      }
+    });
+
+    if (!wrongProblem) {
+      return res.status(404).json({
+        success: false,
+        message: 'Wrong problem not found'
+      });
+    }
+
+    await wrongProblem.destroy();
+
+    res.status(200).json({
+      success: true,
+      message: 'Wrong problem deleted'
+    });
+  } catch (error) {
+    console.error('Delete wrong problem error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal error'

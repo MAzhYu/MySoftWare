@@ -58,10 +58,36 @@
       <view class="progress">
         <text class="section-title">学习进度</text>
         <view class="progress-item">
-          <text>正确率：{{ user.learningProgress?.averageAccuracy || 0 }}%</text>
-          <text>练习总数：{{ user.learningProgress?.totalExercises || 0 }}</text>
+          <view class="progress-row">
+            <text class="progress-label">练习总数：</text>
+            <text class="progress-value">{{ user.learningProgress?.totalExercises || 0 }} 题</text>
+          </view>
+          <view class="progress-row">
+            <text class="progress-label">正确题数：</text>
+            <text class="progress-value">{{ user.learningProgress?.correctAnswers || 0 }} 题</text>
+          </view>
+          <view class="progress-row">
+            <text class="progress-label">正确率：</text>
+            <text class="progress-value highlight">{{ user.learningProgress?.averageAccuracy || 0 }}%</text>
+          </view>
+          <view class="progress-row">
+            <text class="progress-label">练习时长：</text>
+            <text class="progress-value">{{ formatPracticeTime(user.totalPracticeTime) }}</text>
+          </view>
         </view>
       </view>
+      
+      <!-- 错题集入口 -->
+      <view class="menu-section">
+        <view class="menu-item" @click="goToWrongProblems">
+          <view class="menu-left">
+            <image src="/static/icons/fail.png" class="menu-icon" />
+            <text class="menu-text">我的错题集</text>
+          </view>
+          <text class="menu-arrow">›</text>
+        </view>
+      </view>
+      
 	  <button class="edit-btn" @click="openEditModal">修改信息</button>
       <button class="logout-btn" @click="logout">退出登录</button>
     </view>
@@ -240,6 +266,20 @@ export default {
         url: '/pages/register/register'
       })
     },
+    goToWrongProblems() {
+      uni.navigateTo({
+        url: '/pages/wrongProblems/wrongProblems'
+      })
+    },
+    formatPracticeTime(seconds) {
+      if (!seconds) return '0分钟'
+      const hours = Math.floor(seconds / 3600)
+      const minutes = Math.floor((seconds % 3600) / 60)
+      if (hours > 0) {
+        return `${hours}小时${minutes}分钟`
+      }
+      return `${minutes}分钟`
+    },
     roleName(role) {
       switch (role) {
         case 'student':
@@ -397,12 +437,78 @@ export default {
 .progress-item {
   background-color: #f6f8f9;
   border-radius: 20rpx;
-  padding: 20rpx;
+  padding: 25rpx;
   font-size: 26rpx;
   color: #333;
+}
+
+.progress-row {
   display: flex;
-  flex-direction: column;
-  gap: 10rpx;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12rpx 0;
+  border-bottom: 1px solid #e8eaed;
+}
+
+.progress-row:last-child {
+  border-bottom: none;
+}
+
+.progress-label {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.progress-value {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.progress-value.highlight {
+  color: #20d0b0;
+  font-size: 32rpx;
+}
+
+/* 菜单区域 */
+.menu-section {
+  margin-top: 30rpx;
+  background-color: #fff;
+  border-radius: 20rpx;
+  overflow: hidden;
+}
+
+.menu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx 25rpx;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-left {
+  display: flex;
+  align-items: center;
+}
+
+.menu-icon {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 20rpx;
+}
+
+.menu-text {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.menu-arrow {
+  font-size: 40rpx;
+  color: #999;
 }
 
 /* 退出按钮 */

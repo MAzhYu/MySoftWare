@@ -31,14 +31,33 @@ User.prototype.comparePassword = async function(candidatePassword) {
 };
 
 User.prototype.updateLearningProgress = async function(correct, total, practiceTime) {
-  const lp = this.learningProgress || { grade: '一年级', currentLevel: '基础', totalExercises: 0, correctAnswers: 0, averageAccuracy: 0, lastPracticeDate: null };
-  lp.totalExercises += total;
-  lp.correctAnswers += correct;
-  lp.averageAccuracy = parseFloat(((lp.correctAnswers / Math.max(1, lp.totalExercises)) * 100).toFixed(2));
+  // Get current learning progress or initialize
+  const lp = this.learningProgress || { 
+    grade: '一年级', 
+    currentLevel: '基础', 
+    totalExercises: 0, 
+    correctAnswers: 0, 
+    averageAccuracy: 0, 
+    lastPracticeDate: null 
+  };
+  
+  // Update values
+  lp.totalExercises = (lp.totalExercises || 0) + total;
+  lp.correctAnswers = (lp.correctAnswers || 0) + correct;
+  lp.averageAccuracy = parseFloat(
+    ((lp.correctAnswers / Math.max(1, lp.totalExercises)) * 100).toFixed(2)
+  );
   lp.lastPracticeDate = new Date();
-  this.learningProgress = lp;
-  this.totalPracticeTime = (this.totalPracticeTime || 0) + (practiceTime || 0);
-  await this.save();
+  
+  // Update practice time
+  const newPracticeTime = (this.totalPracticeTime || 0) + (practiceTime || 0);
+  
+  // Use update method to ensure Sequelize tracks changes
+  await this.update({
+    learningProgress: lp,
+    totalPracticeTime: newPracticeTime
+  });
+  
   return this;
 };
 
