@@ -1,0 +1,16 @@
+{
+  "name": "bzd",
+  "version": "1.0.0",
+  "description": "基于 uni-app + Vue（默认 Vue3，兼容 Vue2 条件编译）的多端前端项目，提供首页、AI 助手、口算 PK、我的与考试页面，支持 H5 / App(uni-app) / 各类小程序。",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "socket.io-client": "^4.8.1"
+  }
+}
