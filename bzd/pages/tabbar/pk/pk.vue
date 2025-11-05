@@ -60,8 +60,8 @@ export default {
     return {
       step: 1, // 当前阶段：1选择模式，2创建房间，3加入房间
       questionCounts: [5, 10, 20, 30],
-      types: ['混合运算'],
-      timeLimits: [30, 60, 90, 120],
+      types: ['混合运算','加减法','乘除法'],
+      timeLimits: [15,30, 60, 90, 120],
 
       countIndex: 1,
       typeIndex: 0,

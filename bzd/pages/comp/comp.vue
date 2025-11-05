@@ -6,9 +6,18 @@
     </view>
 
     <view class="players">
-      <view class="player"><image src="/static/icons/student.png" class="avatar" /><text>{{ myScore }} 分</text></view>
-      <view class="player"><image src="/static/icons/robot.png" class="avatar" /><text>{{ otherScore }} 分</text></view>
+      <view class="player">
+        <!-- <image :src="players[0]?.avatar || '/static/icons/student.png'" class="avatar" /> -->
+        <text class="name">{{ players[0]?.name || '房主' }}</text>
+        <text>{{ myScore }} 分</text>
+      </view>
+      <view class="player">
+        <!-- <image :src="players[1]?.avatar || '/static/icons/robot.png'" class="avatar" /> -->
+        <text class="name">{{ players[1]?.name || '对手' }}</text>
+        <text>{{ otherScore }} 分</text>
+      </view>
     </view>
+
 
     <view v-if="currentProblem && !isOver" class="problem-box">
       <text class="problem">{{ currentProblem.question }}</text>
@@ -26,7 +35,7 @@
 
 <script>
 import io from 'socket.io-client'
-const BASE_URL = 'http://192.168.110.168:5000'
+const BASE_URL = 'http://10.12.55.50:5000'
 
 export default {
   data() {
@@ -50,8 +59,11 @@ export default {
     }
   },
   onLoad(option) {
+	this.user = uni.getStorageSync('user') || {}
+
     const data = JSON.parse(decodeURIComponent(option.data))
     this.roomData = data
+	this.players = data.players || []
     this.socket = io(BASE_URL, { transports: ['websocket'], reconnection: true })
 
     this.socket.on('connect', () => { this.selfId = this.socket.id })
@@ -152,8 +164,9 @@ export default {
       }
     },
     startPK() {
-      this.timeLeft = this.roomData.timeLimit || 15
-
+      // ✅ 修复这里
+      this.timeLeft = this.roomData.config?.timeLimit || 15
+    
       clearInterval(this.timer)
       this.isOver = false
       this.resultText = ''
@@ -298,5 +311,34 @@ startRematchCountdown() {
   background-color: #ffa500;
   color: white;
 }
+.players {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 40rpx;
+}
+
+.player-card, .player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 60rpx;
+  border: 4rpx solid #20d0b0;
+  object-fit: cover;
+  box-shadow: 0 4rpx 8rpx rgba(0,0,0,0.1);
+}
+
+.player-name, .name {
+  font-size: 28rpx;
+  color: #333;
+  margin-top: 10rpx;
+}
+
 </style>
 

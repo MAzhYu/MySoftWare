@@ -155,8 +155,12 @@ export default {
           data: { email: this.email, password: this.password }
         })
         uni.setStorageSync('token', res.token)
-        uni.showToast({ title: '登录成功',image: "/static/icons/success.png" })
-        await this.loadUser()
+          uni.setStorageSync('user', res.user)
+        
+          // ✅ 立即更新当前页面显示
+          this.user = res.user
+        
+          uni.showToast({ title: '登录成功', image: "/static/icons/success.png" })
       } catch (err) {
         uni.showToast({ title: '登录失败，请检查账号或网络', icon: 'none',image: "/static/icons/fail.png" })
       } finally {
@@ -178,6 +182,7 @@ export default {
           auth: true
         })
         this.user = res.user
+		uni.setStorageSync('user', res.user)
       } catch (err) {
         this.user = null
       }
@@ -252,6 +257,7 @@ export default {
         if (data && data.success && data.url) {
           if (!this.user) this.user = {}
           this.user.avatarUrl = data.url
+		   uni.setStorageSync('user', this.user)
           uni.showToast({ title: '头像已更新', icon: 'none' })
         } else {
           uni.showToast({ title: '上传失败', icon: 'none' })

@@ -20,6 +20,7 @@
         </view>
       </view>
 
+
       <button class="ready-btn" :disabled="selfReady" @click="sendReady">
         {{ selfReady ? '已准备' : '点击准备' }}
       </button>
@@ -34,7 +35,7 @@
 
 <script>
 import io from 'socket.io-client'
-const BASE_URL = 'http://192.168.110.168:5000'
+const BASE_URL = 'http://10.12.55.50:5000'
 
 export default {
   data() {
@@ -50,6 +51,7 @@ export default {
     }
   },
   onLoad(option) {
+	this.user = uni.getStorageSync('user') || {}
     const data = JSON.parse(decodeURIComponent(option.data))
     this.roomData = data
 
@@ -57,39 +59,31 @@ export default {
 
     this.socket.on('connect', () => {
       if (this.roomData.mode === 'create') {
-        this.socket.emit('createRoom', this.roomData)
+        this.socket.emit('createRoom', {
+          ...this.roomData,
+          name: this.user?.name || '房主',
+          avatar: this.user?.avatarUrl || '/static/icons/student.png'
+        })
       } else {
-        this.socket.emit('joinRoom', this.roomData.roomCode)
+        this.socket.emit('joinRoom', this.roomData.roomCode, {
+          name: this.user?.name || '挑战者',
+          avatar: this.user?.avatarUrl || '/static/icons/robot.png'
+        })
       }
+
     })
 
-    this.socket.on('roomCreated', (res) => {
-      this.roomData.roomCode = res.roomCode
-	  this.roomData.config = res.config 
-      this.players = [
-        { name: '我（房主）', avatar: '/static/icons/student.png', ready: false },
-        { name: '等待加入...', avatar: '/static/icons/robot.png', ready: false }
-      ]
-    })
 
     // ✅ 接收加入房间事件（带上 config）
+    this.socket.on('roomCreated', (res) => {
+      this.roomData.roomCode = res.roomCode
+      this.roomData.config = res.config
+      this.players = res.players || []   
+    })
+    
     this.socket.on('playerJoined', (res) => {
-      // 确保接收到服务器发来的配置对象
-      if (res && res.config) {
-        this.roomData.config = res.config
-      }
-    
-      // 更新前端玩家显示
-      if (this.roomData.mode === 'create') {
-        this.players[1].name = '对手'
-      } else {
-        this.players = [
-          { name: '房主', avatar: '/static/icons/robot.png', ready: false },
-          { name: '我（加入者）', avatar: '/static/icons/student.png', ready: false }
-        ]
-      }
-    
-      // 同步准备状态
+      if (res?.config) this.roomData.config = res.config
+      this.players = res.players || []   
       this.updateReadyStatus()
     })
 
@@ -144,7 +138,6 @@ export default {
 </script>
 
 <style scoped>
-/* 同你原样 */
 .container { display:flex; flex-direction:column; align-items:center; padding:60rpx 40rpx; background-color:#f7f8fa; min-height:100vh; }
 .room-info { text-align:center; margin-bottom:40rpx; }
 .room-title { font-size:36rpx; font-weight:bold; color:#00496e; }
@@ -175,6 +168,34 @@ export default {
   font-size: 30rpx;
   margin-bottom: 10rpx;
   display: block;
+}
+.players {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 40rpx;
+}
+
+.player-card, .player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 60rpx;
+  border: 4rpx solid #20d0b0;
+  object-fit: cover;
+  box-shadow: 0 4rpx 8rpx rgba(0,0,0,0.1);
+}
+
+.player-name, .name {
+  font-size: 28rpx;
+  color: #333;
+  margin-top: 10rpx;
 }
 
 </style>
