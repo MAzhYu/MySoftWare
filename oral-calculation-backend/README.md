@@ -51,6 +51,15 @@ MYSQL_PASSWORD=your_password
 # AI_PROVIDER=deepseek
 # DEEPSEEK_API_KEY=sk-***
 # AI_MODEL=deepseek-chat  # 或设置 DEEPSEEK_MODEL
+
+# 阿里云 OSS（可选，用于头像上传与存储）
+# ALIYUN_OSS_ENDPOINT=oss-cn-xxx.aliyuncs.com
+# ALIYUN_OSS_REGION=oss-cn-xxx
+# ALIYUN_OSS_BUCKET=your_bucket_name
+# ALIYUN_OSS_ACCESS_KEY_ID=AKIDxxx
+# ALIYUN_OSS_ACCESS_KEY_SECRET=xxx
+# 可选（STS 临时凭证时使用）：
+# ALIYUN_OSS_SECURITY_TOKEN=xxx
 ```
 
 1. 在 MySQL 中创建数据库（若不存在）：
@@ -78,6 +87,7 @@ CREATE DATABASE oral_calc CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
    - GET /api/auth/me
    - POST /api/ai/chat （body: { prompt: "用一句话赞美数学" }）
    - POST /api/ai/explain （body: { expression, correctAnswer, userAnswer, grade? }）
+   - POST /api/auth/avatar（form-data: file=头像图片文件；返回 { success, url, user }）
 
 用 Apifox 一键验证（推荐）
 
@@ -101,6 +111,15 @@ MYSQL_PASSWORD=YourStrongP@ss
 - 启动时报错 ER_ACCESS_DENIED_ERROR：检查 .env 中的 MYSQL_USER/MYSQL_PASSWORD。
 - 表未创建：确认 .env 已配置且首次启动日志显示 MySQL connected，必要时删除数据库后重试。
 - AI 提示 501 Not Implemented：说明未配置 API Key。按上文 .env 示例设置对应环境变量后重启。
+- 上传头像 501 Not Implemented：说明未配置 OSS 环境变量（ENDPOINT/REGION/BUCKET/AK 等）。
+- 上传成功但头像无法访问：检查 Bucket 的读权限（建议公共读）或自定义 CDN 域名；当前代码返回的 URL 为 OSS 默认公开地址。
+
+头像功能说明
+
+- 模型字段：新增 `User.avatarUrl`，注册/无头像时使用一个默认头像 URL。
+- 上传接口：`POST /api/auth/avatar`（需要登录），使用 `multipart/form-data`，字段名为 `file`。
+- 后端实现：内存存储接收图片 → 阿里云 OSS `avatars/{userId}/...` 路径存储 → 更新 `user.avatarUrl` 并返回。
+- 前端（uni-app）：`/pages/tabbar/me/me.vue` 中“修改信息”弹窗支持预览与上传，上传成功后自动刷新头像。
 
 许可证
 

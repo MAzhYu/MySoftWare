@@ -11,7 +11,8 @@ export const api = {
   profile: `${BASE_URL}/api/auth/profile`,
   aiStatus: `${BASE_URL}/api/ai/status`,
   aiChat: `${BASE_URL}/api/ai/chat`,
-  aiExplain: `${BASE_URL}/api/ai/explain`
+  aiExplain: `${BASE_URL}/api/ai/explain`,
+  avatarUpload: `${BASE_URL}/api/auth/avatar`
 }
 
 export function request({ url, method = 'GET', data = {}, auth = false, headers = {} }) {

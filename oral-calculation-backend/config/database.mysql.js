@@ -16,7 +16,8 @@ const connectDB = async () => {
   try {
     await sequelize.authenticate();
     console.log(`MySQL connected: ${sequelize.options.host}:${sequelize.options.port}`);
-    await sequelize.sync();
+  // Auto sync models and add new columns when model changes
+  await sequelize.sync({ alter: true });
   } catch (error) {
     console.error('Database connection failed:', error);
     process.exit(1);

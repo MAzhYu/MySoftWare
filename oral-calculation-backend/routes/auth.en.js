@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const { Op } = require('sequelize');
 const User = require('../models/User.mysql');
+const multer = require('multer');
+const OSSService = require('../services/OSSService');
 const { protect, authorize } = require('../middleware/auth');
 
 const router = express.Router();
@@ -39,6 +41,7 @@ const sendTokenResponse = (user, statusCode, res) => {
       username: user.username,
       email: user.email,
       role: user.role,
+      avatarUrl: user.avatarUrl,
       profile: user.profile,
       learningProgress: user.learningProgress,
       achievements: user.achievements
@@ -104,6 +107,7 @@ router.get('/me', protect, async (req, res) => {
         username: user.username,
         email: user.email,
         role: user.role,
+        avatarUrl: user.avatarUrl,
         profile: user.profile,
         learningProgress: user.learningProgress,
         achievements: user.achievements,
@@ -131,7 +135,7 @@ router.put('/profile', protect, [
     const updateFields = {};
 
     // Basic scalar fields
-    ['username', 'email', 'profile'].forEach(f => {
+    ['username', 'email', 'profile', 'avatarUrl'].forEach(f => {
       if (req.body[f] !== undefined) updateFields[f] = req.body[f];
     });
     if (updateFields.email && updateFields.email !== req.user.email)
@@ -165,6 +169,7 @@ router.put('/profile', protect, [
         username: req.user.username,
         email: req.user.email,
         role: req.user.role,
+        avatarUrl: req.user.avatarUrl,
         profile: req.user.profile,
         learningProgress: req.user.learningProgress,
         achievements: req.user.achievements
@@ -259,3 +264,28 @@ router.post('/update-progress', protect, [
 });
 
 module.exports = router;
+// Upload avatar (multipart/form-data, field name: file)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+});
+
+router.post('/avatar', protect, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+    if (!OSSService.isConfigured()) {
+      return res.status(501).json({ success: false, message: 'OSS is not configured' });
+    }
+
+    const url = await OSSService.uploadAvatar(req.file.buffer, req.file.originalname, req.user.id);
+    req.user.avatarUrl = url;
+    await req.user.save({ fields: ['avatarUrl'] });
+
+    res.status(200).json({ success: true, url });
+  } catch (error) {
+    console.error('Upload avatar error:', error);
+    res.status(500).json({ success: false, message: 'Failed to upload avatar' });
+  }
+});

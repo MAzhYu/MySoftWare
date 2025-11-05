@@ -8,6 +8,11 @@ const User = sequelize.define('User', {
   email: { type: DataTypes.STRING(100), allowNull: false, unique: true },
   password: { type: DataTypes.STRING(200), allowNull: false },
   role: { type: DataTypes.ENUM('student', 'parent', 'teacher', 'admin'), defaultValue: 'student' },
+  avatarUrl: { 
+    type: DataTypes.STRING(500), 
+    allowNull: false, 
+    defaultValue: 'https://javaweb-learn-heliuyue.oss-cn-beijing.aliyuncs.com/Default_Image.png' 
+  },
   profile: { type: DataTypes.JSON, defaultValue: {} },
   familyRelations: { type: DataTypes.JSON, defaultValue: [] },
   learningProgress: { type: DataTypes.JSON, defaultValue: { grade: '一年级', currentLevel: '基础', totalExercises: 0, correctAnswers: 0, averageAccuracy: 0, lastPracticeDate: null } },

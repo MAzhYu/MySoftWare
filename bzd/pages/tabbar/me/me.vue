@@ -2,7 +2,7 @@
   <view class="container">
     <!-- 顶部标题 -->
     <view class="header">
-      <image src="/static/icons/login.png" class="avatar" />
+      <image :src="user?.avatarUrl || defaultAvatar" class="avatar" />
       <text class="title">我的账户</text>
     </view>
 
@@ -33,14 +33,7 @@
     <!-- 已登录状态 -->
     <view v-else class="profile-card">
       <view class="user-info">
-        <image src="/static/icons/c.png" class="profile-avatar" />
-<!--        <view class="avatar-wrapper" @click="chooseAvatar">
-          <image
-            :src="user.profile?.avatar || '/static/icons/default-avatar.png'"
-            class="profile-avatar"
-          />
-          <text class="edit-avatar">更改头像</text>
-        </view> -->
+        <image :src="user?.avatarUrl || defaultAvatar" class="profile-avatar" />
         <view class="info-text">
           <text class="name">{{ user.username }}</text>
           <text class="email">{{ user.email }}</text>
@@ -113,6 +106,12 @@
           </view>
         </picker>
 
+        <view class="avatar-upload">
+          <text class="avatar-label">头像：</text>
+          <image :src="user?.avatarUrl || defaultAvatar" class="modal-avatar" @click="chooseAvatar" />
+          <button class="upload-btn" @click="chooseAvatar">上传头像</button>
+        </view>
+
         <view class="modal-actions">
           <button class="cancel-btn" @click="closeModal">取消</button>
           <button class="confirm-btn" @click="submitEdit">保存</button>
@@ -130,7 +129,8 @@ export default {
     return {
       email: '',
       password: '',
-      user: null,
+  user: null,
+  defaultAvatar: 'https://javaweb-learn-heliuyue.oss-cn-beijing.aliyuncs.com/Default_Image.png',
       grades: ['一年级', '二年级', '三年级', '四年级', '五年级', '六年级'],
       gradeIndex: 0,
 	  showEditModal: false,
@@ -223,6 +223,44 @@ export default {
     },
     onEditGradeChange(e) {
       this.editGradeIndex = e.detail.value
+    },
+
+    // 选择并上传头像
+    async chooseAvatar() {
+      try {
+        const picked = await new Promise((resolve) => {
+          uni.chooseImage({ count: 1, sizeType: ['compressed'], sourceType: ['album','camera'], success: resolve, fail: () => resolve(null) })
+        })
+        if (!picked || !picked.tempFilePaths || !picked.tempFilePaths[0]) return
+        const filePath = picked.tempFilePaths[0]
+
+        uni.showLoading({ title: '上传中...' })
+        const token = uni.getStorageSync('token')
+        const uploadRes = await new Promise((resolve, reject) => {
+          uni.uploadFile({
+            url: api.avatarUpload,
+            filePath,
+            name: 'file',
+            header: { 'Authorization': `Bearer ${token}` },
+            success: (res) => resolve(res),
+            fail: (err) => reject(err)
+          })
+        })
+
+        let data
+        try { data = JSON.parse(uploadRes.data) } catch { data = uploadRes.data }
+        if (data && data.success && data.url) {
+          if (!this.user) this.user = {}
+          this.user.avatarUrl = data.url
+          uni.showToast({ title: '头像已更新', icon: 'none' })
+        } else {
+          uni.showToast({ title: '上传失败', icon: 'none' })
+        }
+      } catch (e) {
+        uni.showToast({ title: '上传失败', icon: 'none' })
+      } finally {
+        uni.hideLoading()
+      }
     },
 
     // 提交修改
@@ -587,6 +625,10 @@ export default {
   padding: 20rpx;
   margin-bottom: 25rpx;
 }
+.avatar-upload { display: flex; align-items: center; justify-content: flex-start; margin: 10rpx 0 30rpx; }
+.avatar-label { font-size: 28rpx; color: #00496e; margin-right: 16rpx; }
+.modal-avatar { width: 120rpx; height: 120rpx; border-radius: 50%; margin-right: 16rpx; border: 2rpx solid #eee; }
+.upload-btn { background-color: #20a0ff; color: #fff; border: none; padding: 10rpx 20rpx; border-radius: 20rpx; }
 .modal-actions {
   display: flex;
   justify-content: space-around;
