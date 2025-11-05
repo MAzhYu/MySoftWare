@@ -69,9 +69,15 @@ io.on('connection', (socket) => {
   // 创建房间
 socket.on('createRoom', (data = {}) => {
   const roomCode = Math.floor(100000 + Math.random() * 900000).toString()
-
   rooms[roomCode] = {
-    players: [socket.id],
+    players: [
+      {
+        id: socket.id,
+        name: data.name || '房主',
+        avatar: data.avatar || '/static/icons/student.png',
+        ready: false
+      }
+    ],
     scores: {},
     finished: {},
     finalized: false,
@@ -80,33 +86,32 @@ socket.on('createRoom', (data = {}) => {
       questionCount: data.questionCount || 10,
       type: data.type || '混合运算',
       timeLimit: data.timeLimit || 30,
-      seed: data.seed || Math.floor(Math.random() * 1000000) // ✅ 优先使用前端 seed
+      seed: data.seed || Math.floor(Math.random() * 1000000)
     }
   }
 
   socket.join(roomCode)
-  socket.emit('roomCreated', { roomCode, config: rooms[roomCode].config })
-  console.log(`🏠 Room created: ${roomCode}, seed=${rooms[roomCode].config.seed}`)
+  socket.emit('roomCreated', {
+    roomCode,
+    config: rooms[roomCode].config,
+    players: rooms[roomCode].players
+  })
 });
-socket.on('joinRoom', (roomCode) => {
+socket.on('joinRoom', (roomCode, playerData = {}) => {
   const room = rooms[roomCode]
   if (room && room.players.length < 2) {
-    room.players.push(socket.id)
+    room.players.push({
+      id: socket.id,
+      name: playerData.name || '加入者',
+      avatar: playerData.avatar || '/static/icons/robot.png',
+      ready: false
+    })
     socket.join(roomCode)
-    io.to(roomCode).emit('playerJoined', { config: room.config })  // ✅ 向双方广播房间配置
-    console.log(`👥 Player joined room ${roomCode}, seed=${room.config.seed}`)
-  } else {
-    socket.emit('roomFullOrNotExist')
-  }
-});
-  // 加入房间
-socket.on('joinRoom', (roomCode) => {
-  const room = rooms[roomCode]
-  if (room && room.players.length < 2) {
-    room.players.push(socket.id)
-    socket.join(roomCode)
-    io.to(roomCode).emit('playerJoined', { config: room.config }) // ✅ 带上配置
-    console.log(`👥 Player joined room ${roomCode}, seed=${room.config.seed}`)
+
+    io.to(roomCode).emit('playerJoined', {
+      config: room.config,
+      players: room.players
+    })
   } else {
     socket.emit('roomFullOrNotExist')
   }
