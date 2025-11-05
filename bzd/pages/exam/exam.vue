@@ -146,6 +146,7 @@
 
       <!-- 底部操作按钮 -->
       <view class="result-footer">
+        <button class="action-btn export" @click="exportTxt">导出TXT</button>
         <button class="action-btn primary" @click="backToHome">返回首页</button>
         <button class="action-btn secondary" @click="viewWrongProblems">查看错题集</button>
       </view>
@@ -477,6 +478,110 @@ saveProgress(isUnfinished) {
 
 
     // ✅ 难度图标
+    // ✅ 导出本次题目与批改结果为 TXT
+    exportTxt() {
+      if (!this.showResult || !this.resultData) {
+        return uni.showToast({ title: '请先完成并批改试卷', icon: 'none' })
+      }
+
+      const summary = this.resultData.summary || {}
+      const details = this.resultData.details || []
+      const pad = (n) => (n < 10 ? '0' + n : '' + n)
+      const now = new Date()
+      const filename = `口算练习_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.txt`
+
+      const lines = []
+      lines.push('【口算练习导出】')
+      lines.push(`时间：${now.toLocaleString()}`)
+      lines.push(`年级：${this.grade}  模块：${this.moduleName}  难度：${this.difficulty}`)
+      lines.push(`总题数：${summary.total}  正确：${summary.correct}  正确率：${summary.accuracy}%`)
+      const usedMin = Math.floor((summary.totalTime || 0) / 60)
+      const usedSec = (summary.totalTime || 0) % 60
+      lines.push(`用时：${usedMin}分${usedSec}秒`)
+      lines.push('')
+      lines.push('—— 题目详情 ——')
+
+      details.forEach((d, i) => {
+        const idx = i + 1
+        const expr = d.expression || this.questions[i]?.expression || this.questions[i]?.question?.replace(' =','') || ''
+        const ua = d.userAnswer ?? this.questions[i]?.answer ?? ''
+        const ca = d.correctAnswer ?? ''
+        const correctMark = d.isCorrect ? '正确' : '错误'
+        lines.push(`${idx}. ${expr}`)
+        lines.push(`   你的答案：${ua}    结果：${correctMark}`)
+        if (!d.isCorrect) {
+          lines.push(`   正确答案：${ca}`)
+        }
+      })
+
+      const content = lines.join('\n')
+
+      // 各端保存
+      // #ifdef H5
+      try {
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = filename
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+        uni.showToast({ title: '下载已开始' })
+      } catch (e) {
+        uni.showModal({ title: '导出失败', content: '浏览器不支持自动下载，请手动复制内容', showCancel: false })
+      }
+      // #endif
+
+      // #ifdef APP-PLUS
+      try {
+        plus.io.requestFileSystem(plus.io.PRIVATE_DOC, (fs) => {
+          fs.root.getDirectory('exports', { create: true }, (dir) => {
+            dir.getFile(filename, { create: true }, (file) => {
+              file.createWriter((writer) => {
+                writer.onwrite = () => {
+                  uni.showToast({ title: '已保存到本地文件', icon: 'none' })
+                }
+                writer.seek(0)
+                writer.write(content)
+              }, (err) => {
+                uni.showToast({ title: '写入失败', icon: 'none' })
+              })
+            })
+          })
+        }, () => uni.showToast({ title: '无法访问存储', icon: 'none' }))
+      } catch (e) {
+        uni.showToast({ title: '导出失败', icon: 'none' })
+      }
+      // #endif
+
+      // #ifdef MP-WEIXIN
+      try {
+        const fsm = wx.getFileSystemManager()
+        const filePath = `${wx.env.USER_DATA_PATH}/${filename}`
+        fsm.writeFile({
+          filePath,
+          data: content,
+          encoding: 'utf8',
+          success: () => {
+            wx.showToast({ title: '已保存到本地', icon: 'none' })
+          },
+          fail: () => {
+            wx.showModal({ title: '导出失败', content: '请检查存储权限', showCancel: false })
+          }
+        })
+      } catch (e) {
+        uni.showToast({ title: '导出失败', icon: 'none' })
+      }
+      // #endif
+
+      // 其它平台降级：复制内容
+      // #ifndef H5 || APP-PLUS || MP-WEIXIN
+      uni.setClipboardData({ data: content, success: () => uni.showToast({ title: '内容已复制' }) })
+      // #endif
+    },
+
     getDifficultyIcon(level) {
       if (level === '简单') return '/static/icons/easy.png'
       if (level === '中等') return '/static/icons/medium.png'
@@ -821,13 +926,14 @@ saveProgress(isUnfinished) {
 .result-footer {
   display: flex;
   justify-content: space-around;
+  flex-wrap: wrap;
   padding: 20rpx;
   background-color: #fff;
   border-top: 1px solid #eee;
 }
 
 .action-btn {
-  width: 45%;
+  width: 30%;
   height: 80rpx;
   border-radius: 40rpx;
   font-size: 28rpx;
@@ -842,6 +948,11 @@ saveProgress(isUnfinished) {
 
 .action-btn.secondary {
   background-color: #00496e;
+  color: #fff;
+}
+
+.action-btn.export {
+  background-color: #ffa500;
   color: #fff;
 }
 </style>
