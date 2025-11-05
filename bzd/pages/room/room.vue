@@ -35,7 +35,7 @@
 
 <script>
 import io from 'socket.io-client'
-const BASE_URL = 'http://10.12.55.50:5000'
+const BASE_URL = 'http://localhost:5000'
 
 export default {
   data() {

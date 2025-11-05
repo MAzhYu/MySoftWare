@@ -8,7 +8,7 @@
     <view class="players">
       <view class="player">
         <!-- <image :src="players[0]?.avatar || '/static/icons/student.png'" class="avatar" /> -->
-        <text class="name">{{ players[0]?.name || '房主' }}</text>
+        <text class="name">{{ players[0]?.name || '我' }}</text>
         <text>{{ myScore }} 分</text>
       </view>
       <view class="player">
@@ -35,7 +35,7 @@
 
 <script>
 import io from 'socket.io-client'
-const BASE_URL = 'http://10.12.55.50:5000'
+const BASE_URL = 'http://localhost:5000'
 
 export default {
   data() {

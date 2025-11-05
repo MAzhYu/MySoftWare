@@ -135,8 +135,11 @@ socket.on('joinRoom', (roomCode, playerData = {}) => {
       console.log(`🚀 PK started in room ${roomCode}`);
 
       // 启动全局倒计时（30秒后兜底结算）
-      clearTimeout(room.timer);
-      room.timer = setTimeout(() => finalizeRoom(roomCode), 30000);
+      // 启动全局倒计时，根据房间配置 timeLimit 动态设置
+const limit = (room.config?.timeLimit || 30) * 1000;
+clearTimeout(room.timer);
+room.timer = setTimeout(() => finalizeRoom(roomCode), limit);
+
     }
   });
 
@@ -163,8 +166,17 @@ socket.on('joinRoom', (roomCode, playerData = {}) => {
 
   // 同步分数
   socket.on('updateScore', (data) => {
-    socket.to(data.roomCode).emit('updateScore', data.score);
-  });
+  const { roomCode, score } = data;
+  const room = rooms[roomCode];
+  if (!room) return;
+
+  // ✅ 保存当前玩家分数
+  room.scores[socket.id] = score;
+
+  // ✅ 通知对方刷新分数
+  socket.to(roomCode).emit('updateScore', score);
+});
+
 
   // 玩家完成
   socket.on('playerFinished', (data) => {
