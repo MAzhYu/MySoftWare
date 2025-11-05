@@ -357,6 +357,7 @@ export default {
   width: 60rpx;
   height: 60rpx;
   margin-right: 20rpx;
+  border-radius: 50%;
 }
 .title {
   font-size: 34rpx;
@@ -553,7 +554,7 @@ export default {
 .logout-btn {
   margin-top: 50rpx;
   width: 100%;
-  background-color: #f56c6c;
+  background-color: #999;
   color: white;
   font-size: 30rpx;
   border: none;
@@ -575,7 +576,7 @@ export default {
 .edit-btn {
   margin-top: 40rpx;
   width: 100%;
-  background-color: #20a0ff;
+  background-color: #00496e;
   color: white;
   font-size: 30rpx;
   border: none;
@@ -628,7 +629,7 @@ export default {
 .avatar-upload { display: flex; align-items: center; justify-content: flex-start; margin: 10rpx 0 30rpx; }
 .avatar-label { font-size: 28rpx; color: #00496e; margin-right: 16rpx; }
 .modal-avatar { width: 120rpx; height: 120rpx; border-radius: 50%; margin-right: 16rpx; border: 2rpx solid #eee; }
-.upload-btn { background-color: #20a0ff; color: #fff; border: none; padding: 10rpx 20rpx; border-radius: 20rpx; }
+.upload-btn { background-color: #00496e; color: #fff; border: none; padding: 10rpx 20rpx; border-radius: 20rpx; }
 .modal-actions {
   display: flex;
   justify-content: space-around;

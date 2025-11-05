@@ -1,13 +1,13 @@
 {
-  "hash": "d6ac8f8e",
-  "configHash": "22bf0274",
+  "hash": "58fdbc28",
+  "configHash": "35a6ca0e",
   "lockfileHash": "61468961",
-  "browserHash": "1092f0c0",
+  "browserHash": "8cae351e",
   "optimized": {
     "socket.io-client": {
       "src": "../../../../../node_modules/socket.io-client/build/esm/index.js",
       "file": "socket__io-client.js",
-      "fileHash": "2480a1d4",
+      "fileHash": "f3e58178",
       "needsInterop": false
     }
   },

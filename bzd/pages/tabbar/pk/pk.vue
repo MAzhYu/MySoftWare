@@ -60,7 +60,7 @@ export default {
     return {
       step: 1, // 当前阶段：1选择模式，2创建房间，3加入房间
       questionCounts: [5, 10, 20, 30],
-      types: ['加法', '减法', '混合运算','混合运算'],
+      types: ['混合运算'],
       timeLimits: [30, 60, 90, 120],
 
       countIndex: 1,
@@ -99,7 +99,8 @@ export default {
         roomCode: code,
         questionCount: this.questionCounts[this.countIndex],
         type: this.types[this.typeIndex],
-        timeLimit: this.timeLimits[this.timeIndex]
+        timeLimit: this.timeLimits[this.timeIndex],
+		seed: Math.floor(Math.random() * 1000000)
       }
       uni.navigateTo({
         url: `/pages/room/room?data=${encodeURIComponent(JSON.stringify(params))}`
