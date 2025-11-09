@@ -29,31 +29,42 @@
       <button class="continue-btn" @click="continuePractice">继续练习</button>
     </view>
 
-    <!-- 模块区，带横向滑动动画 -->
+    <!-- 模块区：水平滚动，只显示 4 个卡片（其余通过左右滑动查看） -->
     <view class="module-wrapper">
-      <view
-        class="module-container"
-        :class="slideDirection"
-        @animationend="slideDirection = ''"
-      >
-        <view
-          v-for="(module, index) in currentModules"
-          :key="index"
-          class="module-card"
-        >
-          <view class="module-content">
-            <text class="module-title">{{ module.name }}</text>
-            <view class="difficulty">
-              <image
-                :src="getDifficultyIcon(module.difficulty)"
-                class="difficulty-icon"
-              />
-              <text class="module-subtitle">难度：{{ module.difficulty }}</text>
+      <scroll-view class="module-scroll" scroll-x show-scrollbar="false">
+        <view class="module-scroll-inner">
+          <!-- 每个 page 宽度为容器宽度 (100%)，内部使用 2x2 网格 -->
+          <view
+            v-for="(page, pIndex) in modulePages"
+            :key="'page_' + pIndex"
+            class="module-page"
+          >
+            <view class="module-page-grid">
+              <view
+                v-for="(module, index) in page"
+                :key="'m_' + pIndex + '_' + index"
+                class="module-card-grid"
+              >
+                <view class="module-content">
+                  <text class="module-title">{{ module.name }}</text>
+                  <view class="difficulty">
+                    <image
+                      :src="getDifficultyIcon(module.difficulty)"
+                      class="difficulty-icon"
+                    />
+                    <text class="module-subtitle">难度：{{ module.difficulty }}</text>
+                  </view>
+                  <button class="module-btn" @click="enterModule(module)">进入练习</button>
+                </view>
+              </view>
+              <!-- 如果页内不足 4 个，用占位保持布局对齐 -->
+              <view v-if="page.length < 4" class="module-card-grid placeholder" v-for="n in (4 - page.length)" :key="'ph_'+pIndex+'_'+n">
+                <view class="module-content"></view>
+              </view>
             </view>
-            <button class="module-btn" @click="enterModule(module)">进入练习</button>
           </view>
         </view>
-      </view>
+      </scroll-view>
     </view>
 	
     <view class="resource-section">
@@ -88,29 +99,42 @@ export default {
       slideDirection: '',
       lastProgress: null, // ✅ 上次练习数据
       modules: {
+        // 一二年级题型已替换为用户提供的清单（与后端 ProblemService 对应）
         一年级: [
-          { name: '加减训练', difficulty: '简单' },
-          { name: '数字认读', difficulty: '简单' },
-          { name: '图形认识', difficulty: '中等' },
-          { name: '比多少', difficulty: '中等' }
+          { name: '10以内加法', difficulty: '简单' },
+          { name: '10以内减法', difficulty: '简单' },
+          { name: '20以内加法（带进位）', difficulty: '中等' },
+          { name: '20以内减法（带借位）', difficulty: '中等' },
+          { name: '100以内加减法混合运算', difficulty: '困难' },
+          { name: '元角分换算', difficulty: '中等' }
         ],
         二年级: [
-          { name: '进位加减', difficulty: '中等' },
-          { name: '乘法口诀', difficulty: '中等' },
-          { name: '长度单位', difficulty: '简单' },
-          { name: '时间认读', difficulty: '中等' }
+          { name: '9以内乘法口诀', difficulty: '简单' },
+          { name: '9以内除法', difficulty: '简单' },
+          { name: '9以内乘法与加法混合', difficulty: '中等' },
+          { name: '10以内整数连续乘法', difficulty: '中等' },
+          { name: '除数9以内带余数除法', difficulty: '中等' },
+          { name: '时间换算', difficulty: '中等' }
         ],
         三年级: [
-          { name: '乘除混合', difficulty: '中等' },
-          { name: '余数除法', difficulty: '中等' },
-          { name: '简单应用题', difficulty: '困难' },
-          { name: '分数初步', difficulty: '中等' }
+          { name: '三位数加减法', difficulty: '简单' },
+          { name: '两位数乘法', difficulty: '中等' },
+          { name: '长方形、正方形周长的计算', difficulty: '简单' },
+          { name: '长方形、正方形面积的计算', difficulty: '中等' },
+          { name: '百以内的加减乘除法大小比较', difficulty: '困难' },
+          { name: '重量单位换算', difficulty: '简单' },
+          { name: '时间计算', difficulty: '困难' },
+          { name: '余数除法（大数）', difficulty: '困难' }
         ],
         四年级: [
-          { name: '多位数运算', difficulty: '中等' },
-          { name: '时间计算', difficulty: '中等' },
-          { name: '图表统计', difficulty: '中等' },
-          { name: '图形面积', difficulty: '困难' }
+          { name: '小数的加法和减法', difficulty: '简单' },
+          { name: '小数的保留', difficulty: '简单' },
+          { name: '两位数的四则运算', difficulty: '中等' },
+          { name: '千以内含括号的四则运算', difficulty: '中等' },
+          { name: '巧用交换律与结合律', difficulty: '困难' },
+          { name: '巧用乘法分配律', difficulty: '困难' },
+          { name: '比较千以内的算式大小比较', difficulty: '困难' },
+          { name: '近似数认识', difficulty: '中等' }
         ],
         五年级: [
           { name: '分数运算', difficulty: '困难' },
@@ -204,6 +228,17 @@ export default {
   computed: {
     currentModules() {
       return this.modules[this.currentGrade] || []
+    },
+    // 将模块按每页 4 个分组，便于水平分页（每页 2x2 网格）
+    modulePages() {
+      const pages = [];
+      const items = this.currentModules;
+      for (let i = 0; i < items.length; i += 4) {
+        pages.push(items.slice(i, i + 4));
+      }
+      // 保证至少有一页
+      if (pages.length === 0) pages.push([]);
+      return pages;
     },
     currentResources() {
       return this.allResources[this.currentGrade] || []
@@ -408,25 +443,27 @@ export default {
 }
 
 /* 模块卡片 */
-.module-card {
-  width: 43%;
+.module-card-horizontal {
+  width: 25%;
+  min-width: 25%;
   aspect-ratio: 1 / 1;
   background-color: #fff;
   border-left: 10rpx solid #20d0b0;
   border-top-right-radius: 20rpx;
   border-bottom-right-radius: 20rpx;
   box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.1);
-  margin: 20rpx 0;
+  margin: 0rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: transform 0.3s;
   cursor: pointer;
+  box-sizing: border-box;
 }
-.module-card:hover {
+.module-card-horizontal:hover {
   border-left: 10rpx solid #00496e;
-  transform: scale(1.05);
-  transition: all 0.3s ease;
+  transform: scale(1.03);
+  transition: all 0.25s ease;
 }
 
 /* 模块内容 */
@@ -509,6 +546,58 @@ export default {
   box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
   overflow: hidden;
   text-align: center;
+}
+.module-scroll {
+  width: 100%;
+  background-color: transparent;
+}
+.module-scroll-inner {
+  display: flex;
+  align-items: stretch;
+  padding: 10rpx 0;
+}
+.module-scroll::-webkit-scrollbar {
+  display: none;
+}
+.module-page {
+  width: 100%;
+  flex: 0 0 100%;
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 20rpx 10rpx;
+}
+.module-page-grid {
+  width: 92%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20rpx 20rpx;
+}
+.module-card-grid {
+  width: 48%;
+  min-width: 48%;
+  aspect-ratio: 1 / 1;
+  background-color: #fff;
+  border-left: 10rpx solid #20d0b0;
+  border-top-right-radius: 20rpx;
+  border-bottom-right-radius: 20rpx;
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.module-card-grid:hover {
+  border-left: 10rpx solid #00496e;
+  transform: scale(1.03);
+}
+.module-card-grid.placeholder {
+  background: transparent;
+  box-shadow: none;
+  border-left: none;
 }
 .resource-img {
   width: 100%;

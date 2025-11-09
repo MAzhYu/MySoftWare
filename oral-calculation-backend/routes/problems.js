@@ -31,7 +31,15 @@ router.get('/', [
     }
 
     // Validate inputs
-    const validTypes = ['addition', 'subtraction', 'multiplication', 'division', 'mixed', 'comparison', 'fill_blank'];
+    const validTypes = [
+      'addition', 'subtraction', 'multiplication', 'division', 'mixed', 'comparison', 'fill_blank',
+      // 一二年级题型（ProblemService 支持）
+      'addition_10', 'subtraction_10', 'addition_20_carry', 'subtraction_20_borrow', 'mixed_100_add_sub', 'money_conversion',
+      'multiplication_9x9', 'division_9x9', 'mixed_mul_add', 'mixed_consecutive_mul', 'division_with_remainder', 'time_conversion',
+      // 三四年级及其他新增题型（ProblemService 第二批新增）
+      'add_sub_3digit', 'multiplication_2digit', 'perimeter_calc', 'area_calc', 'comparison_100', 'weight_conversion', 'time_duration', 'division_with_remainder_large',
+      'decimal_add_sub', 'decimal_rounding', 'mixed_ops_2digit', 'mixed_ops_parenthesis', 'associative_law', 'distributive_law', 'advanced_comparison', 'number_rounding_unit'
+    ];
     const validDifficulties = ['easy', 'medium', 'hard'];
     
     if (!validTypes.includes(type)) {
@@ -102,13 +110,15 @@ router.post('/submit', [
     // Score problems
     const results = submittedProblems.map(submitted => {
       const isCorrect = problemService.validateAnswer(submitted, submitted.userAnswer);
-      
+
       return {
         id: submitted.id,
         expression: submitted.expression,
         type: submitted.type,
         difficulty: submitted.difficulty,
         correctAnswer: submitted.answer,
+        // 如果服务器端题目包含 remainder，也返回出来，便于前端显示
+        remainder: submitted.remainder !== undefined ? submitted.remainder : undefined,
         userAnswer: submitted.userAnswer,
         isCorrect: isCorrect,
         timeSpent: submitted.timeSpent || 0
@@ -121,6 +131,39 @@ router.post('/submit', [
     if (wrongProblems.length > 0) {
       for (const problem of wrongProblems) {
         try {
+          // Diagnostic logging to help trace why some wrong problems may not be persisted
+          console.log('Saving wrong problem candidate:', {
+            userId,
+            expression: problem.expression,
+            type: problem.type,
+            difficulty: problem.difficulty,
+            userAnswer: problem.userAnswer,
+            correctAnswer: problem.correctAnswer,
+            remainder: problem.remainder
+          });
+
+          // Normalize answers to strings for DB fields (avoid saving objects like {quotient,remainder})
+          function formatAnswerForSave(ans, rem) {
+            if (ans === undefined || ans === null) return '';
+            // If ans is an object (e.g. {quotient, remainder}) convert to readable string
+            if (typeof ans === 'object') {
+              const q = ans.quotient ?? ans.q ?? ans.quotientAnswer ?? null;
+              const r = ans.remainder ?? ans.r ?? ans.rem ?? null;
+              if (q !== null && r !== null && r !== undefined) {
+                return `${q} 余 ${r}`;
+              }
+              if (q !== null) return `${q}`;
+              return JSON.stringify(ans);
+            }
+            // If we have a separate remainder value, include it
+            if (rem !== undefined && rem !== null) {
+              return `${ans} 余 ${rem}`;
+            }
+            return String(ans);
+          }
+
+          const saveUserAnswer = formatAnswerForSave(problem.userAnswer, problem.remainder);
+          const saveCorrectAnswer = formatAnswerForSave(problem.correctAnswer, problem.remainder);
           // Check if this problem already exists for this user
           const existing = await WrongProblem.findOne({
             where: {
@@ -131,21 +174,22 @@ router.post('/submit', [
           });
 
           if (existing) {
-            // Update wrong count and last attempt date
+            // Update wrong count and last attempt date, update the userAnswer string
             await existing.update({
               wrongCount: existing.wrongCount + 1,
               lastAttemptDate: new Date(),
-              userAnswer: problem.userAnswer
+              userAnswer: saveUserAnswer,
+              correctAnswer: saveCorrectAnswer
             });
           } else {
-            // Create new wrong problem record
+            // Create new wrong problem record with normalized answer strings
             await WrongProblem.create({
               userId: userId,
               expression: problem.expression,
               type: problem.type,
               difficulty: problem.difficulty,
-              correctAnswer: problem.correctAnswer,
-              userAnswer: problem.userAnswer,
+              correctAnswer: saveCorrectAnswer,
+              userAnswer: saveUserAnswer,
               grade: grade,
               module: module,
               wrongCount: 1,
@@ -154,7 +198,7 @@ router.post('/submit', [
             });
           }
         } catch (dbError) {
-          console.error('Error saving wrong problem:', dbError);
+          console.error('Error saving wrong problem:', dbError, { problem });
           // Continue with other problems even if one fails
         }
       }

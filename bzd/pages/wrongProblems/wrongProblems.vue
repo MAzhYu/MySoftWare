@@ -70,16 +70,19 @@
         </view>
       </scroll-view>
       
-      <!-- 底部操作栏 -->
-      <view class="bottom-bar">
-        <button class="back-btn" @click="goBack">返回首页</button>
-      </view>
+      <!-- 底部操作栏（移动到页面底部固定显示） -->
+      <!-- NOTE: footer moved outside list so it's always visible -->
     </view>
 
     <!-- 空状态 -->
     <view v-else class="empty-state">
       <image src="/static/icons/success.png" class="empty-icon" />
       <text class="empty-text">{{ showMastered ? '暂无已掌握的题目' : '太棒了！暂无错题' }}</text>
+      <!-- 返回首页按钮放到固定底部 -->
+    </view>
+
+    <!-- 固定底部返回按钮：始终显示在页面底部 -->
+    <view class="fixed-footer">
       <button class="back-btn" @click="goBack">返回首页</button>
     </view>
   </view>
@@ -248,6 +251,8 @@ export default {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  /* 给底部固定按钮留出空间，避免内容被遮挡 */
+  padding-bottom: 180rpx;
   background-color: #f7f8fa;
 }
 
@@ -293,10 +298,11 @@ export default {
   flex-direction: column;
 }
 
-.problem-list {
+ .problem-list {
   flex: 1;
   padding: 20rpx;
-  padding-bottom: 0;
+  /* 底部留白，避免被固定按钮遮挡 */
+  padding-bottom: 200rpx;
 }
 
 .problem-card {
@@ -451,5 +457,25 @@ export default {
   padding: 15rpx 60rpx;
   font-size: 28rpx;
   border: none;
+}
+
+/* 固定底部样式 */
+.fixed-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 18rpx 0;
+  background-color: #fff;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: center;
+  z-index: 1000;
+}
+.fixed-footer .back-btn {
+  width: 80%;
+  border-radius: 30rpx;
+  padding: 14rpx 60rpx;
+  font-size: 28rpx;
 }
 </style>

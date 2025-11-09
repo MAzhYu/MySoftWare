@@ -56,6 +56,14 @@
               {{ opt }}
             </view>
           </view>
+          <!-- 带余数的除法：显示 商 和 余 两个输入框 -->
+          <view v-else-if="(q.type && q.type.indexOf('division_with_remainder') !== -1) || q.remainder !== undefined || q.correctRemainder !== undefined" class="division-remainder">
+            <view class="division-inputs">
+              <input v-model="q.answerQuotient" type="number" class="answer-input" placeholder="商" />
+              <text style="margin:0 10rpx; font-size:28rpx; align-self:center">余</text>
+              <input v-model="q.answerRemainder" type="number" class="answer-input" placeholder="余数" />
+            </view>
+          </view>
 
           <!-- 其他题型：保留输入框 -->
           <input
@@ -133,13 +141,13 @@
           <view class="answer-row">
             <text class="answer-label">你的答案：</text>
             <text :class="['answer-value', detail.isCorrect ? 'correct-answer' : 'wrong-answer']">
-              {{ detail.userAnswer }}
+              {{ formatUserAnswer(detail, index) }}
             </text>
           </view>
 
           <view v-if="!detail.isCorrect" class="answer-row">
             <text class="answer-label">正确答案：</text>
-            <text class="correct-answer">{{ detail.correctAnswer }}</text>
+            <text class="correct-answer">{{ formatCorrectAnswer(detail, index) }}</text>
           </view>
         </view>
       </scroll-view>
@@ -206,6 +214,49 @@ export default {
     problemType() {
       const moduleMap = {
         '加减训练': 'mixed',  // 加减混合
+        // 一、二年级新增题型（与后端 ProblemService 对应）
+  '10以内加法': 'addition_10',
+  '10以内减法': 'subtraction_10',
+  '20以内加法（带进位）': 'addition_20_carry',
+  '20以内减法（带借位）': 'subtraction_20_borrow',
+  '100以内加减混合': 'mixed_100_add_sub',
+  '100以内加减法混合运算': 'mixed_100_add_sub', // 题型文本别名
+  '元角分换算': 'money_conversion',
+  '元角分的换算': 'money_conversion',
+
+  '9x9 乘法口诀': 'multiplication_9x9',
+  '9以内乘法口诀': 'multiplication_9x9',
+  '9x9 除法': 'division_9x9',
+  '9以内除法': 'division_9x9',
+  '乘法与加法混合': 'mixed_mul_add',
+  '9以内乘法与加法混合': 'mixed_mul_add',
+  '连续乘法（3项）': 'mixed_consecutive_mul',
+  '10以内整数连续乘法': 'mixed_consecutive_mul',
+  '带余数除法': 'division_with_remainder',
+  '除数9以内带余数除法': 'division_with_remainder',
+  '时间换算': 'time_conversion',
+
+  // 三年级（13-20）
+  '三位数加减法': 'add_sub_3digit',
+  '两位数乘法': 'multiplication_2digit',
+  '长方形、正方形周长的计算': 'perimeter_calc',
+  '长方形、正方形面积的计算': 'area_calc',
+  '百以内的加减乘除法大小比较': 'comparison_100',
+  '重量单位换算': 'weight_conversion',
+  '时间计算': 'time_duration',
+  '余数除法（大数）': 'division_with_remainder_large',
+
+  // 四年级（21-28）
+  '小数的加法和减法': 'decimal_add_sub',
+  '小数的保留': 'decimal_rounding',
+  '两位数的四则运算': 'mixed_ops_2digit',
+  '千以内含括号的四则运算': 'mixed_ops_parenthesis',
+  '巧用交换律与结合律': 'associative_law',
+  '巧用乘法分配律': 'distributive_law',
+  '比较千以内的算式大小比较': 'advanced_comparison',
+  '近似数认识': 'number_rounding_unit',
+
+        // 其他旧模块映射（保留）
         '数字认读': 'comparison',  // 暂用比较题代替
         '图形认识': 'fill_blank',  // 暂用填空题代替
         '比多少': 'comparison',
@@ -216,10 +267,9 @@ export default {
         '乘除混合': 'mixed',
         '余数除法': 'division',
         '简单应用题': 'mixed',
-        '分数初步': 'fill_blank',
-        '多位数运算': 'mixed',
-        '时间计算': 'fill_blank',
-        '图表统计': 'fill_blank',
+  '分数初步': 'fill_blank',
+  '多位数运算': 'mixed',
+  '图表统计': 'fill_blank',
         '图形面积': 'fill_blank',
         '分数运算': 'fill_blank',
         '小数运算': 'fill_blank',
@@ -299,23 +349,65 @@ export default {
           method: 'GET',
           auth: true
         })
-        
-        if (res.success && res.data && res.data.length > 0) {
-          // 转换后端返回的数据格式为前端需要的格式
-          this.questions = res.data.map(p => ({
-            id: p.id,
-            // 比大小题不加等号，显示为 "a ? b"
-            question: p.type === 'comparison' ? p.expression : p.expression + ' =',
-            answer: '',
-            correctAnswer: p.answer,
-            type: p.type,
-            difficulty: p.difficulty,
-            expression: p.expression,
-            options: p.options
-          }))
+
+        // 兼容多种后端返回格式：
+        // 1) { success: true, data: [...] }
+        // 2) [...]  （直接数组）
+        // 3) { count: n, data: [...] }
+        let problems = []
+        try {
+          if (Array.isArray(res)) {
+            problems = res
+          } else if (res && Array.isArray(res.data)) {
+            problems = res.data
+          } else if (res && Array.isArray(res.problems)) {
+            problems = res.problems
+          } else if (res && res.count && Array.isArray(res.data)) {
+            problems = res.data
+          }
+        } catch (e) {
+          console.warn('解析后端出题响应时出现异常', e, res)
+        }
+
+          if (problems && problems.length > 0) {
+          this.questions = problems.map(p => {
+            // Normalize certain variant types to unified keys for UI
+            let normalizedType = p.type || p.problemType || 'mixed'
+            const ntStr = String(normalizedType)
+            if (ntStr.indexOf('division_with_remainder') !== -1) {
+              normalizedType = 'division_with_remainder'
+            } else if (ntStr.indexOf('comparison') !== -1) {
+              // comparison_100, advanced_comparison -> comparison (render as choices >,<,=)
+              normalizedType = 'comparison'
+            }
+
+            return {
+              id: p.id,
+              question: normalizedType === 'comparison' ? p.expression : (p.expression ? p.expression + ' =' : (p.question || '')),
+              answer: '',
+              // 带余数题目把 remainder 一并保存
+              correctRemainder: p.remainder !== undefined ? p.remainder : undefined,
+              // 注意：answer 可能为 0，不能用 `||` 否则会被误判为 undefined
+              correctAnswer: (p.answer !== undefined && p.answer !== null)
+                ? p.answer
+                : (p.correctAnswer !== undefined && p.correctAnswer !== null)
+                  ? p.correctAnswer
+                  : p.answerValue,
+              remainder: p.remainder !== undefined ? p.remainder : undefined,
+              type: normalizedType,
+              difficulty: p.difficulty || this.difficultyMap,
+              expression: p.expression || p.expr || '',
+              options: p.options,
+              // 初始化双输入字段（带余数）
+              answerQuotient: '',
+              answerRemainder: ''
+            }
+          })
           uni.hideLoading()
         } else {
-          throw new Error('后端返回数据为空')
+          // 如果后端返回了错误信息，记录在控制台并抛错以进入本地模式
+          console.warn('后端出题返回非预期格式或空数据：', res)
+          throw new Error('后端返回数据为空或格式不支持')
         }
       } catch (err) {
         console.error('获取题目失败:', err)
@@ -341,13 +433,262 @@ export default {
           : this.difficulty === '中等'
           ? 50
           : 100
-      if (this.moduleName.includes('加减')) {
-        this.questions = this.createAddSubQuestions(level)
-      } else if (this.moduleName.includes('乘除')) {
-        this.questions = this.createMulDivQuestions(level)
+      // 针对新增的一二年级题型做本地降级生成
+      if (this.moduleName === '10以内加法') {
+        this.questions = Array.from({ length: this.questionCount }, () => {
+          const a = Math.floor(Math.random() * 11)
+          const b = Math.floor(Math.random() * (11 - a))
+          return { question: `${a} + ${b} =`, answer: '' }
+        })
+      } else if (this.moduleName === '10以内减法') {
+        this.questions = Array.from({ length: this.questionCount }, () => {
+          const a = Math.floor(Math.random() * 11)
+          const b = Math.floor(Math.random() * (a + 1))
+          return { question: `${a} - ${b} =`, answer: '' }
+        })
+      } else if (
+        this.moduleName === '20以内加法（带进位）' ||
+        this.moduleName === '20以内减法（带借位）' ||
+        this.moduleName === '100以内加减混合' ||
+        this.moduleName === '100以内加减法混合运算'
+      ) {
+        // 使用通用加减生成，范围调整
+        const range = this.moduleName.includes('100') ? 100 : 20
+        this.questions = Array.from({ length: this.questionCount }, () => {
+          const a = Math.floor(Math.random() * (range - 1)) + 1
+          const b = Math.floor(Math.random() * (range - 1)) + 1
+          const op = Math.random() > 0.5 ? '+' : '-'
+          return { question: `${a} ${op} ${b} =`, answer: '' }
+        })
+      } else if (
+        this.moduleName === '元角分换算' ||
+        this.moduleName === '元角分的换算' ||
+        this.moduleName === '时间换算'
+      ) {
+        // 简单单位换算题本地生成
+        this.questions = Array.from({ length: this.questionCount }, () => {
+          if (this.moduleName === '元角分换算') {
+            const j = Math.floor(Math.random() * 9) + 1
+            const f = Math.floor(Math.random() * 9) + 1
+            return { question: `${j}角${f}分 = ? 分`, answer: '' }
+          } else {
+            const m = Math.floor(Math.random() * 9) + 1
+            const s = Math.floor(Math.random() * 59) + 1
+            return { question: `${m}分${s}秒 = ? 秒`, answer: '' }
+          }
+        })
+  } else if (this.moduleName === '9x9 乘法口诀' || this.moduleName === '9以内乘法口诀') {
+        this.questions = Array.from({ length: this.questionCount }, () => {
+          const a = Math.floor(Math.random() * 9) + 1
+          const b = Math.floor(Math.random() * 9) + 1
+          return { question: `${a} × ${b} =`, answer: '' }
+        })
+      } else if (
+        this.moduleName === '9x9 除法' ||
+        this.moduleName === '9以内除法' ||
+        this.moduleName === '带余数除法' ||
+        this.moduleName === '除数9以内带余数除法'
+      ) {
+        this.questions = Array.from({ length: this.questionCount }, () => {
+          const b = Math.floor(Math.random() * 9) + 1
+          const q = Math.floor(Math.random() * 9) + 1
+          const a = b * q + Math.floor(Math.random() * b)
+          return { question: `${a} ÷ ${b} =`, answer: '' }
+        })
+      } else if (
+        this.moduleName === '乘法与加法混合' ||
+        this.moduleName === '9以内乘法与加法混合' ||
+        this.moduleName === '连续乘法（3项）' ||
+        this.moduleName === '10以内整数连续乘法'
+      ) {
+        this.questions = Array.from({ length: this.questionCount }, () => {
+          if (this.moduleName === '连续乘法（3项）') {
+            const a = Math.floor(Math.random() * 9) + 1
+            const b = Math.floor(Math.random() * 9) + 1
+            const c = Math.floor(Math.random() * 9) + 1
+            return { question: `${a} × ${b} × ${c} =`, answer: '' }
+          }
+          const a = Math.floor(Math.random() * 9) + 1
+          const b = Math.floor(Math.random() * 9) + 1
+          const c = Math.floor(Math.random() * 20) + 1
+          if (Math.random() > 0.5) return { question: `${a} × ${b} + ${c} =`, answer: '' }
+          return { question: `${a} + ${b} × ${c} =`, answer: '' }
+        })
       } else {
-        this.questions = this.createAddSubQuestions(level)
+        // 兼容旧模块
+        if (this.moduleName.includes('加减')) {
+          this.questions = this.createAddSubQuestions(level)
+        } else if (this.moduleName.includes('乘除')) {
+          this.questions = this.createMulDivQuestions(level)
+        } else {
+          this.questions = this.createAddSubQuestions(level)
+        }
       }
+        // 新增：三年级和四年级本地降级生成覆盖（13-28）
+        // 三位数加减法
+        if (this.moduleName === '三位数加减法') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            const op = Math.random() > 0.5 ? '+' : '-'
+            let a = Math.floor(Math.random() * 900) + 100
+            let b = Math.floor(Math.random() * 900) + 100
+            if (op === '-' && b > a) [a, b] = [b, a]
+            return { question: `${a} ${op} ${b} =`, answer: '' }
+          })
+        }
+
+        // 两位数乘法
+        if (this.moduleName === '两位数乘法') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            const a = Math.floor(Math.random() * 90) + 10
+            const b = Math.floor(Math.random() * 90) + 10
+            return { question: `${a} × ${b} =`, answer: '' }
+          })
+        }
+
+        // 周长与面积
+        if (this.moduleName === '长方形、正方形周长的计算') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            if (Math.random() > 0.5) {
+              const l = Math.floor(Math.random() * 50) + 1
+              const w = Math.floor(Math.random() * 50) + 1
+              return { question: `长方形长${l}cm, 宽${w}cm, 周长是? cm`, answer: '' }
+            } else {
+              const s = Math.floor(Math.random() * 50) + 1
+              return { question: `正方形边长${s}cm, 周长是? cm`, answer: '' }
+            }
+          })
+        }
+
+        if (this.moduleName === '长方形、正方形面积的计算') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            if (Math.random() > 0.5) {
+              const l = Math.floor(Math.random() * 50) + 1
+              const w = Math.floor(Math.random() * 50) + 1
+              return { question: `长方形长${l}cm, 宽${w}cm, 面积是? cm²`, answer: '' }
+            } else {
+              const s = Math.floor(Math.random() * 50) + 1
+              return { question: `正方形边长${s}cm, 面积是? cm²`, answer: '' }
+            }
+          })
+        }
+
+        // 百以内比较
+        if (this.moduleName === '百以内的加减乘除法大小比较') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            const a = Math.floor(Math.random() * 99) + 1
+            const b = Math.floor(Math.random() * 99) + 1
+            const ops = ['+', '-', '×', '÷']
+            const op = ops[Math.floor(Math.random() * ops.length)]
+            let leftExpr = `${a} ${op} ${b}`
+            if (op === '÷') {
+              const divisor = Math.floor(Math.random() * 9) + 1
+              const q = Math.floor(Math.random() * 9) + 1
+              const dividend = divisor * q
+              leftExpr = `${dividend} ÷ ${divisor}`
+            }
+            const right = Math.floor(Math.random() * 200) + 1
+            // compute correct comparator
+            let leftVal = 0
+            try {
+              leftVal = new Function(`return ${leftExpr.replace(/×/g, '*').replace(/÷/g, '/')}`)()
+            } catch (e) {
+              leftVal = 0
+            }
+            const comp = leftVal > right ? '>' : (leftVal < right ? '<' : '=')
+            return { question: `${leftExpr} ? ${right}`, answer: '', type: 'comparison', options: ['>', '<', '='], correctAnswer: comp }
+          })
+        }
+
+        // 重量单位换算
+        if (this.moduleName === '重量单位换算') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            const t = Math.floor(Math.random() * 99) + 1
+            return { question: `${t}吨 = ? 千克`, answer: '' }
+          })
+        }
+
+        // 时间计算
+        if (this.moduleName === '时间计算') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            // pick a start time and a positive duration (no overflow to previous day)
+            const h1 = Math.floor(Math.random() * 23) // 0-22
+            const m1 = Math.floor(Math.random() * 60)
+            // duration between 1 minute and up to remaining minutes in day (but keep reasonable)
+            const addMinutes = Math.floor(Math.random() * 8) * 15 + (Math.floor(Math.random() * 4)) + 1 // small increments
+            let total1 = h1 * 60 + m1
+            let total2 = total1 + addMinutes
+            if (total2 >= 24 * 60) total2 = (total1 + (addMinutes % (24 * 60))) % (24 * 60)
+            const h2 = Math.floor(total2 / 60)
+            const m2 = total2 % 60
+            const t1 = `${String(h1).padStart(2,'0')}:${String(m1).padStart(2,'0')}`
+            const t2 = `${String(h2).padStart(2,'0')}:${String(m2).padStart(2,'0')}`
+            return { question: `${t1}到${t2}是 ? 分钟`, answer: '' }
+          })
+        }
+
+        // 余数除法（大数） - 生成被除数1000以内，除数100以内
+        if (this.moduleName === '余数除法' || this.moduleName === '余数除法（大数）') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            const b = Math.floor(Math.random() * 99) + 1
+            const q = Math.floor(Math.random() * 20) + 1
+            const a = b * q + Math.floor(Math.random() * b) // ensure remainder < b
+            const correctQuotient = Math.floor(a / b)
+            const correctRemainder = a % b
+            return {
+              question: `${a} ÷ ${b} =`,
+              answer: '',
+              type: 'division_with_remainder',
+              correctAnswer: correctQuotient,
+              remainder: correctRemainder,
+              answerQuotient: '',
+              answerRemainder: ''
+            }
+          })
+        }
+
+        // 小数加减
+        if (this.moduleName === '小数的加法和减法') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            const a = (Math.floor(Math.random() * 1000) / 100).toFixed(2)
+            const b = (Math.floor(Math.random() * 1000) / 100).toFixed(2)
+            return { question: `${a} ${Math.random()>0.5?'+':'-'} ${b} =`, answer: '' }
+          })
+        }
+
+        // 小数保留
+        if (this.moduleName === '小数的保留') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            const num = (Math.random() * 100).toFixed(3)
+            const d = Math.random() > 0.5 ? 1 : 2
+            return { question: `${num} (保留${d}位小数)`, answer: '' }
+          })
+        }
+
+        // 两位数四则运算 & 带括号四则
+        if (this.moduleName === '两位数的四则运算' || this.moduleName === '千以内含括号的四则运算') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            const a = Math.floor(Math.random() * 90) + 10
+            const b = Math.floor(Math.random() * 90) + 10
+            const c = Math.floor(Math.random() * 90) + 10
+            if (this.moduleName === '千以内含括号的四则运算') {
+              return { question: `${a} × (${b} - ${Math.floor(Math.random()*b)}) =`, answer: '' }
+            }
+            const op1 = Math.random()>0.5? '×' : '÷'
+            const op2 = Math.random()>0.5? '+' : '-'
+            if (op1 === '÷') {
+              const divisor = Math.floor(Math.random() * 9) + 1
+              const q = Math.floor(Math.random() * 9) + 1
+              const dividend = divisor * q
+              return { question: `${dividend} ÷ ${divisor} ${op2} ${c} =`, answer: '' }
+            }
+            return { question: `${a} ${op1} ${b} ${op2} ${c} =`, answer: '' }
+          })
+        }
+
+        // 交换律/结合律/分配律/比较千以内/近似数认识 - 简单生成占位题
+        if (this.moduleName === '巧用交换律与结合律' || this.moduleName === '巧用乘法分配律' || this.moduleName === '比较千以内的算式大小比较' || this.moduleName === '近似数认识') {
+          this.questions = Array.from({ length: this.questionCount }, () => ({ question: '请写出计算结果', answer: '' }))
+        }
     },
 
     createAddSubQuestions(range) {
@@ -372,7 +713,16 @@ export default {
     async submitAnswers() {
       clearInterval(this.timer)
       
-      const empty = this.questions.some(q => !q.answer)
+      // 校验所有题目的答案是否已填写：针对带余数的除法检查两个输入框
+      const empty = this.questions.some(q => {
+        if (q.type === 'division_with_remainder') {
+          return !(q.answerQuotient !== undefined && q.answerQuotient !== '' && q.answerRemainder !== undefined && q.answerRemainder !== '')
+        }
+        if (q.type === 'comparison') {
+          return !(q.answer !== undefined && q.answer !== '')
+        }
+        return !(q.answer !== undefined && q.answer !== '')
+      })
       if (empty) {
         uni.showToast({ title: '请填写所有答案', icon: 'none' })
         return
@@ -385,15 +735,33 @@ export default {
       
       try {
         // 构造提交数据
-        const problems = this.questions.map(q => ({
-          id: q.id,
-          expression: q.expression || q.question.replace(' =', ''),
-          answer: q.correctAnswer,
-          userAnswer: q.answer,
-          type: q.type || 'mixed',
-          difficulty: q.difficulty || this.difficultyMap,
-          timeSpent: 0  // 可以后续优化为单题计时
-        }))
+        const problems = this.questions.map(q => {
+          if (q.type === 'division_with_remainder') {
+            return {
+              id: q.id,
+              expression: q.expression || q.question.replace(' =', ''),
+              answer: q.correctAnswer, // 商
+              remainder: q.remainder || q.correctRemainder || undefined,
+              userAnswer: {
+                quotient: Number(q.answerQuotient),
+                remainder: Number(q.answerRemainder)
+              },
+              type: q.type || 'division_with_remainder',
+              difficulty: q.difficulty || this.difficultyMap,
+              timeSpent: 0
+            }
+          }
+
+          return {
+            id: q.id,
+            expression: q.expression || q.question.replace(' =', ''),
+            answer: q.correctAnswer,
+            userAnswer: q.answer,
+            type: q.type || 'mixed',
+            difficulty: q.difficulty || this.difficultyMap,
+            timeSpent: 0  // 可以后续优化为单题计时
+          }
+        })
         
         const totalTime = this.timeLimit * 60 - this.remainingTime
         
@@ -408,22 +776,27 @@ export default {
             module: this.moduleName
           }
         })
-        
+
         uni.hideLoading()
-        
-        if (res.success) {
-          // 保存批改结果并显示
+
+        // 兼容多种后端返回结构：{ success, summary, details } 或直接 { summary, details }
+        const ok = (res && res.success) || (res && res.summary && Array.isArray(res.details))
+
+        if (ok) {
           this.resultData = res
           this.showResult = true
-          
-          // 更新题目列表，标记对错
+
+          const details = res.details || []
           this.questions = this.questions.map((q, index) => ({
             ...q,
-            isCorrect: res.details[index]?.isCorrect,
-            correctAnswer: res.details[index]?.correctAnswer
+            isCorrect: details[index]?.isCorrect,
+            correctAnswer: details[index]?.correctAnswer,
+            // 如果后端返回 remainder，则保存到本地题目信息
+            correctRemainder: details[index]?.remainder ?? details[index]?.correctRemainder ?? q.correctRemainder ?? q.remainder
           }))
         } else {
-          throw new Error(res.message || '评分失败')
+          console.warn('提交评分时后端返回非预期格式或错误：', res)
+          throw new Error((res && res.message) || '评分失败')
         }
       } catch (err) {
         console.error('提交答案失败:', err)
@@ -504,8 +877,8 @@ saveProgress(isUnfinished) {
       details.forEach((d, i) => {
         const idx = i + 1
         const expr = d.expression || this.questions[i]?.expression || this.questions[i]?.question?.replace(' =','') || ''
-        const ua = d.userAnswer ?? this.questions[i]?.answer ?? ''
-        const ca = d.correctAnswer ?? ''
+        const ua = this.formatUserAnswer(d, i)
+        const ca = this.formatCorrectAnswer(d, i)
         const correctMark = d.isCorrect ? '正确' : '错误'
         lines.push(`${idx}. ${expr}`)
         lines.push(`   你的答案：${ua}    结果：${correctMark}`)
@@ -587,6 +960,53 @@ saveProgress(isUnfinished) {
       if (level === '中等') return '/static/icons/medium.png'
       if (level === '困难') return '/static/icons/hard.png'
       return '/static/icons/medium.png'
+    }
+    ,
+    // 格式化用户答案显示（处理带余数除法的对象格式）
+    formatUserAnswer(detail, index) {
+      try {
+        const qType = detail.type || this.questions[index]?.type
+        const ua = detail.userAnswer ?? this.questions[index]?.userAnswer ?? this.questions[index]?.answer
+        if (qType === 'division_with_remainder' || this.questions[index]?.type === 'division_with_remainder') {
+          if (!ua) return ''
+          if (typeof ua === 'object') {
+            const qu = ua.quotient ?? ua.q ?? ua.quot
+            const rem = ua.remainder ?? ua.r ?? ua.rem
+            return `${qu} 余 ${rem}`
+          }
+          // 如果是字符串，尝试抽数字
+          const nums = String(ua).match(/-?\d+/g)
+          if (nums && nums.length >= 1) {
+            const qu = nums[0]
+            const rem = nums[1] ?? ''
+            return rem !== '' ? `${qu} 余 ${rem}` : `${qu}`
+          }
+          return String(ua)
+        }
+        // 非余数除法，直接返回
+        return typeof ua === 'object' ? JSON.stringify(ua) : String(ua)
+      } catch (e) {
+        console.warn('formatUserAnswer error', e, detail)
+        return detail.userAnswer ?? ''
+      }
+    },
+
+    // 格式化正确答案显示（处理带余数除法的 remainder）
+    formatCorrectAnswer(detail, index) {
+      try {
+        const qType = detail.type || this.questions[index]?.type
+        const ca = detail.correctAnswer ?? this.questions[index]?.correctAnswer
+        const rem = detail.remainder ?? detail.correctRemainder ?? this.questions[index]?.correctRemainder ?? this.questions[index]?.remainder
+        if (qType === 'division_with_remainder' || this.questions[index]?.type === 'division_with_remainder') {
+          if (rem !== undefined && rem !== null && rem !== '') return `${ca} 余 ${rem}`
+          // 如果没有 remainder，仍返回商
+          return String(ca)
+        }
+        return String(ca)
+      } catch (e) {
+        console.warn('formatCorrectAnswer error', e, detail)
+        return detail.correctAnswer ?? ''
+      }
     }
   }
 }

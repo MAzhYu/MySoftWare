@@ -1,0 +1,45 @@
+http://localhost:5000/api/problems?type=add_sub_3digit&difficulty=easy&count=5&grade=1
+响应：
+{
+    "success": false,
+    "message": "Invalid problem type. Allowed: addition, subtraction, multiplication, division, mixed, comparison, fill_blank, addition_10, subtraction_10, addition_20_carry, subtraction_20_borrow, mixed_100_add_sub, money_conversion, multiplication_9x9, division_9x9, mixed_mul_add, mixed_consecutive_mul, division_with_remainder, time_conversion"
+}
+
+http://localhost:5000/api/problems/submit
+响应：
+{
+    "success": false,
+    "message": "Validation failed",
+    "errors": [
+        {
+            "type": "field",
+            "msg": "problem id is required",
+            "path": "problems[0].id",
+            "location": "body"
+        },
+        {
+            "type": "field",
+            "msg": "problem id is required",
+            "path": "problems[1].id",
+            "location": "body"
+        },
+        {
+            "type": "field",
+            "msg": "problem id is required",
+            "path": "problems[2].id",
+            "location": "body"
+        },
+        {
+            "type": "field",
+            "msg": "problem id is required",
+            "path": "problems[3].id",
+            "location": "body"
+        },
+        {
+            "type": "field",
+            "msg": "problem id is required",
+            "path": "problems[4].id",
+            "location": "body"
+        }
+    ]
+}
