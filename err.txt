@@ -1,45 +1,74 @@
-http://localhost:5000/api/problems?type=add_sub_3digit&difficulty=easy&count=5&grade=1
-响应：
-{
-    "success": false,
-    "message": "Invalid problem type. Allowed: addition, subtraction, multiplication, division, mixed, comparison, fill_blank, addition_10, subtraction_10, addition_20_carry, subtraction_20_borrow, mixed_100_add_sub, money_conversion, multiplication_9x9, division_9x9, mixed_mul_add, mixed_consecutive_mul, division_with_remainder, time_conversion"
-}
-
 http://localhost:5000/api/problems/submit
 响应：
 {
-    "success": false,
-    "message": "Validation failed",
-    "errors": [
+    "success": true,
+    "message": "Scored successfully",
+    "summary": {
+        "total": 5,
+        "correct": 0,
+        "wrong": 5,
+        "accuracy": 0,
+        "totalTime": 3
+    },
+    "details": [
         {
-            "type": "field",
-            "msg": "problem id is required",
-            "path": "problems[0].id",
-            "location": "body"
+            "id": "prob_1762759622731_5hnev5rjg",
+            "expression": "726 - 146",
+            "type": "add_sub_3digit",
+            "difficulty": "simple",
+            "correctAnswer": 580,
+            "userAnswer": "1",
+            "isCorrect": false,
+            "timeSpent": 0
         },
         {
-            "type": "field",
-            "msg": "problem id is required",
-            "path": "problems[1].id",
-            "location": "body"
+            "id": "prob_1762759622731_dd1vf56ib",
+            "expression": "578 + 910",
+            "type": "add_sub_3digit",
+            "difficulty": "simple",
+            "correctAnswer": 1488,
+            "userAnswer": "1",
+            "isCorrect": false,
+            "timeSpent": 0
         },
         {
-            "type": "field",
-            "msg": "problem id is required",
-            "path": "problems[2].id",
-            "location": "body"
+            "id": "prob_1762759622731_sgjvslc21",
+            "expression": "247 - 128",
+            "type": "add_sub_3digit",
+            "difficulty": "simple",
+            "correctAnswer": 119,
+            "userAnswer": "1",
+            "isCorrect": false,
+            "timeSpent": 0
         },
         {
-            "type": "field",
-            "msg": "problem id is required",
-            "path": "problems[3].id",
-            "location": "body"
+            "id": "prob_1762759622731_wn54dwz5l",
+            "expression": "976 + 686",
+            "type": "add_sub_3digit",
+            "difficulty": "simple",
+            "correctAnswer": 1662,
+            "userAnswer": "1",
+            "isCorrect": false,
+            "timeSpent": 0
         },
         {
-            "type": "field",
-            "msg": "problem id is required",
-            "path": "problems[4].id",
-            "location": "body"
+            "id": "prob_1762759622731_sxnrd0nst",
+            "expression": "771 - 668",
+            "type": "add_sub_3digit",
+            "difficulty": "simple",
+            "correctAnswer": 103,
+            "userAnswer": "1",
+            "isCorrect": false,
+            "timeSpent": 0
         }
-    ]
+    ],
+    "currentProgress": {
+        "grade": "二年级",
+        "currentLevel": "基础",
+        "correctAnswers": 73,
+        "totalExercises": 295,
+        "averageAccuracy": 24.75,
+        "lastPracticeDate": "2025-11-10T07:27:06.288Z"
+    },
+    "totalPracticeTime": 931
 }

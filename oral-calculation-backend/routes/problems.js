@@ -39,6 +39,8 @@ router.get('/', [
       // 三四年级及其他新增题型（ProblemService 第二批新增）
       'add_sub_3digit', 'multiplication_2digit', 'perimeter_calc', 'area_calc', 'comparison_100', 'weight_conversion', 'time_duration', 'division_with_remainder_large',
       'decimal_add_sub', 'decimal_rounding', 'mixed_ops_2digit', 'mixed_ops_parenthesis', 'associative_law', 'distributive_law', 'advanced_comparison', 'number_rounding_unit'
+      // 五、六年级新增题型（ProblemService 第三批新增）
+      , 'decimal_multiplication_10', 'decimal_division_10', 'decimal_division_round_1', 'parallelogram_area', 'triangle_area', 'trapezoid_area', 'circle_area', 'simple_equation', 'cylinder_volume', 'sphere_volume', 'fraction_add_sub', 'fraction_mul'
     ];
     const validDifficulties = ['easy', 'medium', 'hard'];
     
@@ -105,6 +107,13 @@ router.post('/submit', [
     }
 
     const { problems: submittedProblems, totalTime = 0, grade, module } = req.body;
+    // 解析 grade 并记录以便诊断（前端应传 1-6）
+    let parsedGrade = null;
+    if (grade !== undefined && grade !== null && grade !== '') {
+      const g = parseInt(grade);
+      if (!isNaN(g)) parsedGrade = g;
+    }
+    console.log('Submit payload grade/raw -> parsed:', { raw: grade, parsed: parsedGrade });
     const userId = req.user.id;
 
     // Score problems
@@ -179,7 +188,9 @@ router.post('/submit', [
               wrongCount: existing.wrongCount + 1,
               lastAttemptDate: new Date(),
               userAnswer: saveUserAnswer,
-              correctAnswer: saveCorrectAnswer
+              correctAnswer: saveCorrectAnswer,
+              // 如果提交时包含年级，则更新记录中的年级信息
+              ...(parsedGrade ? { grade: parsedGrade } : {})
             });
           } else {
             // Create new wrong problem record with normalized answer strings
@@ -190,7 +201,7 @@ router.post('/submit', [
               difficulty: problem.difficulty,
               correctAnswer: saveCorrectAnswer,
               userAnswer: saveUserAnswer,
-              grade: grade,
+              grade: parsedGrade,
               module: module,
               wrongCount: 1,
               isMastered: false,
@@ -240,6 +251,8 @@ router.post('/submit', [
         accuracy: parseFloat(accuracy),
         totalTime: totalTime
       },
+      // 返回解析后的 grade 以便调试前端是否正确传入
+      submittedGrade: parsedGrade,
       details: results,
       currentProgress: req.updatedProgress ? req.updatedProgress.learningProgress : undefined,
       totalPracticeTime: req.updatedProgress ? req.updatedProgress.totalPracticeTime : undefined
@@ -345,7 +358,8 @@ router.get('/wrong', protect, async (req, res) => {
       difficulty,
       isMastered = false,
       limit = 50,
-      offset = 0
+      offset = 0,
+      grade
     } = req.query;
 
     const where = {
@@ -355,6 +369,11 @@ router.get('/wrong', protect, async (req, res) => {
 
     if (type) where.type = type;
     if (difficulty) where.difficulty = difficulty;
+    // 如果前端传递了 grade 参数（1-6），按年级过滤
+    if (grade !== undefined && grade !== null && grade !== '') {
+      const g = parseInt(grade);
+      if (!isNaN(g)) where.grade = g;
+    }
 
     const wrongProblems = await WrongProblem.findAll({
       where,

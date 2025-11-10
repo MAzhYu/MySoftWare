@@ -207,8 +207,24 @@ export default {
     },
     // 年级数字（从"一年级"提取1）
     gradeNumber() {
-      const match = this.grade.match(/(\d+)/)
-      return match ? parseInt(match[1]) : 1
+      // 支持多种传入形式：
+      // - 阿拉伯数字，如 '1' 或 '1年级'
+      // - 中文数字表示的年级，例如 '一年级','二年级' 等
+      if (!this.grade) return 1
+      // 尝试直接提取阿拉伯数字
+      const arabic = String(this.grade).match(/(\d+)/)
+      if (arabic) return parseInt(arabic[1])
+
+      // 中文数字映射（仅支持 一-六）
+      const chineseMap = { '一':1, '二':2, '三':3, '四':4, '五':5, '六':6 }
+      const zhMatch = String(this.grade).match(/([一二三四五六])/)
+      if (zhMatch && chineseMap[zhMatch[1]]) return chineseMap[zhMatch[1]]
+
+      // 兜底：如果字符串中包含 '年级' 之前的数字（如 '三年级' 等处理失败），尝试最后一位数字
+      const lastDigit = String(this.grade).slice(-2).match(/(\d)/)
+      if (lastDigit) return parseInt(lastDigit[1])
+
+      return 1
     },
     // 模块名称到后端题型的映射
     problemType() {
@@ -255,6 +271,21 @@ export default {
   '巧用乘法分配律': 'distributive_law',
   '比较千以内的算式大小比较': 'advanced_comparison',
   '近似数认识': 'number_rounding_unit',
+    // 五年级（29-35） & 六年级（36-40）
+  '10以内小数乘法': 'decimal_multiplication_10',
+  '10以内小数除法': 'decimal_division_10',
+  '小数除法(保留一位小数)': 'decimal_division_round_1',
+  // 兼容首页 tabbar 中使用的命名（包含“商”字样）
+  '小数除法(商保留一位小数)': 'decimal_division_round_1',
+  '平行四边形面积计算': 'parallelogram_area',
+  '三角形面积的计算': 'triangle_area',
+  '梯形面积的计算': 'trapezoid_area',
+  '圆面积的计算': 'circle_area',
+  '简单方程练习': 'simple_equation',
+  '圆柱的体积计算': 'cylinder_volume',
+  '球体积计算': 'sphere_volume',
+  '带分数的加减法': 'fraction_add_sub',
+  '带分数的乘法': 'fraction_mul',
 
         // 其他旧模块映射（保留）
         '数字认读': 'comparison',  // 暂用比较题代替
@@ -381,9 +412,34 @@ export default {
               normalizedType = 'comparison'
             }
 
+            // 只有某些算术题型需要在表达式后加上等号
+            const equalTypes = new Set([
+              'addition','subtraction','multiplication','division','mixed',
+              'addition_10','subtraction_10','addition_20_carry','subtraction_20_borrow','mixed_100_add_sub',
+              'multiplication_9x9','division_9x9','mixed_mul_add','mixed_consecutive_mul',
+              'add_sub_3digit','multiplication_2digit','mixed_ops_2digit','mixed_ops_parenthesis',
+              'decimal_add_sub','decimal_multiplication_10','decimal_division_10','decimal_division_round_1',
+              'fraction_add_sub','fraction_mul'
+            ])
+
+            // 原始文本优先取 p.expression，否则取 p.question
+            let rawQuestion = p.expression || p.question || ''
+
+            // 对于 comparison（比大小）单独渲染为选择题，不显示等号
+            let renderedQuestion = rawQuestion
+            if (normalizedType !== 'comparison' && equalTypes.has(normalizedType)) {
+              const trimmed = String(rawQuestion).trim()
+              // 如果已经以等号或问号结尾，则不再追加
+              if (!/[=？?]$/.test(trimmed)) {
+                renderedQuestion = trimmed + ' ='
+              } else {
+                renderedQuestion = trimmed
+              }
+            }
+
             return {
               id: p.id,
-              question: normalizedType === 'comparison' ? p.expression : (p.expression ? p.expression + ' =' : (p.question || '')),
+              question: normalizedType === 'comparison' ? p.expression : renderedQuestion,
               answer: '',
               // 带余数题目把 remainder 一并保存
               correctRemainder: p.remainder !== undefined ? p.remainder : undefined,
@@ -688,6 +744,122 @@ export default {
         // 交换律/结合律/分配律/比较千以内/近似数认识 - 简单生成占位题
         if (this.moduleName === '巧用交换律与结合律' || this.moduleName === '巧用乘法分配律' || this.moduleName === '比较千以内的算式大小比较' || this.moduleName === '近似数认识') {
           this.questions = Array.from({ length: this.questionCount }, () => ({ question: '请写出计算结果', answer: '' }))
+        }
+
+        // ===== 五、六年级新增本地降级生成（29-40） =====
+        // 29. 10以内小数乘法
+        if (this.moduleName === '10以内小数乘法') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            const a = (Math.floor(Math.random() * 100) / 10).toFixed(1)
+            const b = (Math.floor(Math.random() * 100) / 10).toFixed(1)
+            return { question: `${a} × ${b} =`, answer: '' }
+          })
+        }
+
+        // 30. 10以内小数除法
+        if (this.moduleName === '10以内小数除法') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            // 确保除数不为0
+            const a = (Math.floor(Math.random() * 990) / 100 + 0.1).toFixed(2)
+            const b = (Math.floor(Math.random() * 99) / 10 + 0.1).toFixed(1)
+            return { question: `${a} ÷ ${b} =`, answer: '' }
+          })
+        }
+
+        // 31. 小数除法(商保留一位小数) / 小数除法(保留一位小数)
+        if (this.moduleName === '小数除法(保留一位小数)' || this.moduleName === '小数除法(商保留一位小数)') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            const a = (Math.random() * 19 + 1).toFixed(2)
+            const b = (Math.random() * 9 + 1).toFixed(2)
+            return { question: `${a} ÷ ${b} ≈ ? (保留一位小数)`, answer: '' }
+          })
+        }
+
+        // 32. 平行四边形面积计算
+        if (this.moduleName === '平行四边形面积计算') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            const base = Math.floor(Math.random() * 100) + 1
+            const height = Math.floor(Math.random() * 100) + 1
+            return { question: `平行四边形的底是${base}cm, 高是${height}cm, 面积是? cm²`, answer: '' }
+          })
+        }
+
+        // 33. 三角形面积的计算
+        if (this.moduleName === '三角形面积的计算') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            const base = Math.floor(Math.random() * 100) + 1
+            const height = Math.floor(Math.random() * 100) + 1
+            return { question: `三角形的底边是${base}cm, 高是${height}cm, 面积是? cm²`, answer: '' }
+          })
+        }
+
+        // 34. 梯形面积的计算
+        if (this.moduleName === '梯形面积的计算') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            const top = Math.floor(Math.random() * 80) + 1
+            const bottom = Math.floor(Math.random() * 80) + top
+            const height = Math.floor(Math.random() * 50) + 1
+            return { question: `梯形的上底是${top}cm, 下底是${bottom}cm, 高是${height}cm, 面积是? cm²`, answer: '' }
+          })
+        }
+
+        // 35. 圆面积的计算
+        if (this.moduleName === '圆面积的计算') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            const r = Math.floor(Math.random() * 30) + 1
+            return { question: `圆的半径是${r}cm, 面积是? cm² (π取3.14)`, answer: '' }
+          })
+        }
+
+        // 36. 简单方程练习
+        if (this.moduleName === '简单方程练习') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            const a = Math.floor(Math.random() * 8) + 2
+            const x = Math.floor(Math.random() * 10) + 1
+            const b = Math.floor(Math.random() * 20) + 1
+            const c = a * x + b
+            return { question: `${a}x + ${b} = ${c}, x=?`, answer: '' }
+          })
+        }
+
+        // 37. 圆柱的体积计算
+        if (this.moduleName === '圆柱的体积计算') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            const r = Math.floor(Math.random() * 20) + 1
+            const h = Math.floor(Math.random() * 20) + 1
+            return { question: `圆柱的半径是${r}cm, 高是${h}cm, 体积是? cm³ (π取3.14)`, answer: '' }
+          })
+        }
+
+        // 38. 球体积计算
+        if (this.moduleName === '球体积计算') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            const r = Math.floor(Math.random() * 20) + 1
+            return { question: `球的半径是${r}cm, 体积是? cm³ (π取3.14)`, answer: '' }
+          })
+        }
+
+        // 39. 带分数的加减法
+        if (this.moduleName === '带分数的加减法') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            const n1 = Math.floor(Math.random() * 8) + 1
+            const d1 = Math.floor(Math.random() * 9) + 2
+            const n2 = Math.floor(Math.random() * 8) + 1
+            const d2 = Math.floor(Math.random() * 9) + 2
+            const op = Math.random() > 0.5 ? '+' : '-'
+            return { question: `${n1}/${d1} ${op} ${n2}/${d2} =`, answer: '' }
+          })
+        }
+
+        // 40. 带分数的乘法
+        if (this.moduleName === '带分数的乘法') {
+          this.questions = Array.from({ length: this.questionCount }, () => {
+            const n1 = Math.floor(Math.random() * 8) + 1
+            const d1 = Math.floor(Math.random() * 9) + 2
+            const n2 = Math.floor(Math.random() * 8) + 1
+            const d2 = Math.floor(Math.random() * 9) + 2
+            return { question: `${n1}/${d1} × ${n2}/${d2} =`, answer: '' }
+          })
         }
     },
 

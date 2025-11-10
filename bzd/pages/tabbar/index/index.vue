@@ -137,16 +137,20 @@ export default {
           { name: '近似数认识', difficulty: '中等' }
         ],
         五年级: [
-          { name: '分数运算', difficulty: '困难' },
-          { name: '小数运算', difficulty: '中等' },
-          { name: '比例与比', difficulty: '中等' },
-          { name: '百分数初步', difficulty: '困难' }
+          { name: '10以内小数乘法', difficulty: '中等' },
+          { name: '10以内小数除法', difficulty: '中等' },
+          { name: '小数除法(商保留一位小数)', difficulty: '中等' },
+          { name: '平行四边形面积计算', difficulty: '简单' },
+          { name: '三角形面积的计算', difficulty: '简单' },
+          { name: '梯形面积的计算', difficulty: '中等' },
+          { name: '圆面积的计算', difficulty: '中等' },
+          { name: '简单方程练习', difficulty: '中等' }
         ],
         六年级: [
-          { name: '综合运算', difficulty: '中等' },
-          { name: '图形变换', difficulty: '困难' },
-          { name: '比例尺应用', difficulty: '中等' },
-          { name: '数据与概率', difficulty: '困难' }
+          { name: '圆柱的体积计算', difficulty: '中等' },
+          { name: '球体积计算', difficulty: '中等' },
+          { name: '带分数的加减法', difficulty: '中等' },
+          { name: '带分数的乘法', difficulty: '中等' }
         ],
       },
       allResources: {

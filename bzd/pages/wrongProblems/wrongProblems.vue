@@ -6,11 +6,11 @@
       <text class="title">我的错题集</text>
     </view>
 
-    <!-- 筛选区 -->
+    <!-- 筛选区（题型替换为年级） -->
     <view class="filter-bar">
-      <picker :range="typeOptions" :value="typeIndex" @change="onTypeChange">
+      <picker :range="gradeOptions" :value="gradeIndex" @change="onGradeChange">
         <view class="filter-item">
-          <text>题型：{{ typeOptions[typeIndex] }}</text>
+          <text>年级：{{ gradeOptions[gradeIndex] }}</text>
         </view>
       </picker>
       
@@ -37,7 +37,6 @@
             <view class="problem-meta">
               <text class="problem-type">{{ getTypeLabel(problem.type) }}</text>
               <text class="problem-difficulty">{{ getDifficultyLabel(problem.difficulty) }}</text>
-              <text class="wrong-count">错误 {{ problem.wrongCount }} 次</text>
             </view>
             <view class="problem-actions">
               <button v-if="!problem.isMastered" class="action-btn master" @click="markAsMastered(problem.id)">
@@ -95,9 +94,10 @@ export default {
   data() {
     return {
       wrongProblems: [],
-      typeOptions: ['全部', '加法', '减法', '乘法', '除法', '混合运算', '比较', '填空'],
-      typeValues: ['', 'addition', 'subtraction', 'multiplication', 'division', 'mixed', 'comparison', 'fill_blank'],
-      typeIndex: 0,
+  // 年级筛选：包含“全部”项，默认选择全部（不传 grade 参数）
+  gradeOptions: ['全部', '一年级', '二年级', '三年级', '四年级', '五年级', '六年级'],
+  // 默认 0 -> 全部
+  gradeIndex: 0,
       difficultyOptions: ['全部', '简单', '中等', '困难'],
       difficultyValues: ['', 'easy', 'medium', 'hard'],
       difficultyIndex: 0,
@@ -115,11 +115,13 @@ export default {
         const params = {
           isMastered: this.showMastered
         }
-        
-        if (this.typeIndex > 0) {
-          params.type = this.typeValues[this.typeIndex]
+
+        // 如果选择了具体年级（gradeIndex > 0），将年级（1-6）传给后端；0 表示全部，不传 grade
+        if (this.gradeIndex > 0) {
+          // 因为 gradeOptions 第一项为 '全部'，index 1 对应一年级 -> grade = 1
+          params.grade = this.gradeIndex
         }
-        
+
         if (this.difficultyIndex > 0) {
           params.difficulty = this.difficultyValues[this.difficultyIndex]
         }
@@ -145,8 +147,8 @@ export default {
       }
     },
     
-    onTypeChange(e) {
-      this.typeIndex = e.detail.value
+    onGradeChange(e) {
+      this.gradeIndex = e.detail.value
       this.loadWrongProblems()
     },
     
@@ -206,15 +208,61 @@ export default {
     
     getTypeLabel(type) {
       const map = {
+        // 常规类型
         'addition': '加法',
         'subtraction': '减法',
         'multiplication': '乘法',
         'division': '除法',
         'mixed': '混合运算',
         'comparison': '比较',
-        'fill_blank': '填空'
-      }
-      return map[type] || type
+        'fill_blank': '填空',
+        // 一二年级/常见别名
+        'addition_10': '10以内加法',
+        'subtraction_10': '10以内减法',
+        'addition_20_carry': '20以内加法（带进位）',
+        'subtraction_20_borrow': '20以内减法（带借位）',
+        'mixed_100_add_sub': '100以内加减混合',
+        'money_conversion': '元角分换算',
+        'multiplication_9x9': '9x9 乘法',
+        'division_9x9': '9x9 除法',
+        'mixed_mul_add': '乘法与加法混合',
+        'mixed_consecutive_mul': '连续乘法（3项）',
+        'division_with_remainder': '带余数除法',
+        'time_conversion': '时间换算',
+        // 三年级
+        'add_sub_3digit': '三位数加减法',
+        'multiplication_2digit': '两位数乘法',
+        'perimeter_calc': '周长计算',
+        'area_calc': '面积计算',
+        'comparison_100': '百以内比较',
+        'weight_conversion': '重量单位换算',
+        'time_duration': '时间计算',
+        'division_with_remainder_large': '大数带余数除法',
+        // 四年级
+        'decimal_add_sub': '小数加减',
+        'decimal_rounding': '小数的保留',
+        'mixed_ops_2digit': '两位数四则运算',
+        'mixed_ops_parenthesis': '含括号四则运算',
+        'associative_law': '交换/结合律',
+        'distributive_law': '乘法分配律',
+        'advanced_comparison': '千以内比较',
+        'number_rounding_unit': '近似数认识',
+        // 五六年级
+        'decimal_multiplication_10': '10以内小数乘法',
+        'decimal_division_10': '10以内小数除法',
+        'decimal_division_round_1': '小数除法（商保留一位）',
+        'parallelogram_area': '平行四边形面积',
+        'triangle_area': '三角形面积',
+        'trapezoid_area': '梯形面积',
+        'circle_area': '圆面积',
+        'simple_equation': '简单方程',
+        'cylinder_volume': '圆柱体积',
+        'sphere_volume': '球体积',
+        'fraction_add_sub': '带分数加减',
+        'fraction_mul': '带分数乘法'
+      };
+
+      return map[type] || type || '';
     },
     
     getDifficultyLabel(difficulty) {

@@ -75,88 +75,118 @@ class ProblemService {
           problem = this.generateTimeConversion();
           break;
 
-        // --- ⬇️ 以下为 13-28 (第二批新增) ⬇️ ---
-
-        // 13. 三位数加减法
+        // --- 13-28 (第二批新增) ---
         case 'add_sub_3digit':
           problem = this.generateAddSub_3digit();
           break;
-          
-        // 14. 两位数乘法 (重用)
         case 'multiplication_2digit':
           problem = this.generateMultiplication('hard');
           problem.type = 'multiplication_2digit';
-          problem.difficulty = 'medium'; // 按要求设为中等
+          problem.difficulty = 'medium'; 
           break;
-
-        // 15. 长方形、正方形周长的计算
         case 'perimeter_calc':
           problem = this.generatePerimeterCalculation();
           break;
-          
-        // 16. 长方形、正方形面积的计算
         case 'area_calc':
           problem = this.generateAreaCalculation();
           break;
-          
-        // 17. 百以内的加减乘除法大小比较
         case 'comparison_100':
           problem = this.generateComparison_100();
           break;
-          
-        // 18. 重量单位换算
         case 'weight_conversion':
           problem = this.generateWeightConversion();
           break;
-          
-        // 19. 时间计算
         case 'time_duration':
           problem = this.generateTimeDuration();
           break;
-          
-        // 20. 余数除法（大数）
         case 'division_with_remainder_large':
           problem = this.generateDivisionWithRemainder_large();
           break;
-          
-        // 21. 小数的加法和减法
         case 'decimal_add_sub':
           problem = this.generateDecimalAddSub();
           break;
-          
-        // 22. 小数的保留
         case 'decimal_rounding':
           problem = this.generateDecimalRounding();
           break;
-          
-        // 23. 两位数的四则运算
         case 'mixed_ops_2digit':
           problem = this.generateMixedOps_2digit();
           break;
-          
-        // 24. 千以内含括号的四则运算
         case 'mixed_ops_parenthesis':
           problem = this.generateMixedOps_parenthesis();
           break;
-          
-        // 25. 巧用交换律与结合律
         case 'associative_law':
           problem = this.generateAssociativeLaw();
           break;
-          
-        // 26. 巧用乘法分配律
         case 'distributive_law':
           problem = this.generateDistributiveLaw();
           break;
-          
-        // 27. 比较千以内的算式大小比较
         case 'advanced_comparison':
           problem = this.generateAdvancedComparison();
           break;
-
-        // 28. 近似数认识
         case 'number_rounding_unit':
           problem = this.generateNumberRoundingUnit();
+          break;
+          
+        // --- ⬇️ 以下为 29-40 (第三批新增) ⬇️ ---
+
+        // 29. 10以内小数乘法
+        case 'decimal_multiplication_10':
+          problem = this.generateDecimalMultiplication_10();
+          break;
+          
+        // 30. 10以内小数除法
+        case 'decimal_division_10':
+          problem = this.generateDecimalDivision_10();
+          break;
+          
+        // 31. 小数除法(商保留一位小数)
+        case 'decimal_division_round_1':
+          problem = this.generateDecimalDivision_round_1();
+          break;
+          
+        // 32. 平行四边形面积计算
+        case 'parallelogram_area':
+          problem = this.generateParallelogramArea();
+          break;
+          
+        // 33. 三角形面积的计算
+        case 'triangle_area':
+          problem = this.generateTriangleArea();
+          break;
+          
+        // 34. 梯形面积的计算
+        case 'trapezoid_area':
+          problem = this.generateTrapezoidArea();
+          break;
+          
+        // 35. 圆面积的计算
+        case 'circle_area':
+          problem = this.generateCircleArea();
+          break;
+          
+        // 36. 简单方程练习
+        case 'simple_equation':
+          problem = this.generateSimpleEquation();
+          break;
+          
+        // 37. 圆柱的体积计算
+        case 'cylinder_volume':
+          problem = this.generateCylinderVolume();
+          break;
+          
+        // 38. 球体积计算
+        case 'sphere_volume':
+          problem = this.generateSphereVolume();
+          break;
+          
+        // 39. 带分数的加减法
+        case 'fraction_add_sub':
+          problem = this.generateFractionAddSub();
+          break;
+          
+        // 40. 带分数的乘法
+        case 'fraction_mul':
+          problem = this.generateFractionMultiplication();
           break;
 
         // --- 默认 ---
@@ -678,11 +708,7 @@ class ProblemService {
     };
   }
   
-  // --- ⬇️ 13-28 (第二批新增) ⬇️ ---
-
-  /**
-   * 13. 三位数加减法
-   */
+  // --- 13-28 (第二批新增) ---
   generateAddSub_3digit() {
     const op = this.getRandomOperator(['+', '-']);
     let a, b, result;
@@ -705,10 +731,6 @@ class ProblemService {
       options: this.generateOptions(result, 'medium')
     };
   }
-  
-  /**
-   * 15. 长方形、正方形周长的计算
-   */
   generatePerimeterCalculation() {
     let expression, answer;
     if (Math.random() > 0.5) {
@@ -732,10 +754,6 @@ class ProblemService {
       options: this.generateOptions(answer, 'medium')
     };
   }
-
-  /**
-   * 16. 长方形、正方形面积的计算
-   */
   generateAreaCalculation() {
     let expression, answer;
     if (Math.random() > 0.5) {
@@ -759,10 +777,6 @@ class ProblemService {
       options: this.generateOptions(answer, 'medium')
     };
   }
-  
-  /**
-   * 17. 百以内的加减乘除法大小比较
-   */
   generateComparison_100() {
     let a, b, leftExpr, leftVal;
     const op = this.getRandomOperator(['+', '-', '×', '÷']);
@@ -796,10 +810,6 @@ class ProblemService {
       options: ['>', '<', '=']
     };
   }
-  
-  /**
-   * 18. 重量单位换算
-   */
   generateWeightConversion() {
     const t = this.getRandomInt(1, 99);
     const expression = `${t}吨 = ? 千克`;
@@ -813,14 +823,9 @@ class ProblemService {
       options: this.generateOptions(answer, 'hard')
     };
   }
-
-  /**
-   * 19. 时间计算
-   */
   generateTimeDuration() {
     let h1, m1, h2, m2, time1, time2;
     
-    // 循环确保 time2 > time1
     do {
       h1 = this.getRandomInt(0, 23);
       m1 = this.getRandomInt(0, 59);
@@ -843,10 +848,6 @@ class ProblemService {
       options: this.generateOptions(answer, 'medium')
     };
   }
-
-  /**
-   * 20. 余数除法（大数）
-   */
   generateDivisionWithRemainder_large() {
     const a = this.getRandomInt(1, 1000);
     const b = this.getRandomInt(2, 100);
@@ -860,14 +861,9 @@ class ProblemService {
       expression: `${a} ÷ ${b}`,
       answer: result,
       remainder: remainder,
-      // 选项是关于商的
       options: this.generateOptions(result, 'medium')
     };
   }
-
-  /**
-   * 21. 小数的加法和减法
-   */
   generateDecimalAddSub() {
     const op = this.getRandomOperator(['+', '-']);
     const precision = 100; // 最多两位小数
@@ -877,7 +873,7 @@ class ProblemService {
     b = this.getRandomInt(1, 9999) / precision;
 
     if (op === '-' && b > a) {
-      [a, b] = [b, a]; // 交换a, b确保a > b
+      [a, b] = [b, a]; 
     }
     
     if (op === '+') {
@@ -886,7 +882,6 @@ class ProblemService {
       result = a - b;
     }
     
-    // 修正JS浮点数精度问题
     result = parseFloat(result.toFixed(2));
     
     return {
@@ -897,14 +892,9 @@ class ProblemService {
       options: this.generateOptions(result, 'medium')
     };
   }
-
-  /**
-   * 22. 小数的保留
-   */
   generateDecimalRounding() {
-    // 生成一个3-4位小数的数字
     const num = parseFloat((Math.random() * 100).toFixed(this.getRandomInt(3, 4)));
-    const decimals = this.getRandomInt(1, 2); // 保留一位或两位
+    const decimals = this.getRandomInt(1, 2); 
     
     const expression = `${num} (保留${decimals}位小数)`;
     const answer = parseFloat(num.toFixed(decimals));
@@ -917,10 +907,6 @@ class ProblemService {
       options: this.generateOptions(answer, 'easy')
     };
   }
-
-  /**
-   * 23. 两位数的四则运算
-   */
   generateMixedOps_2digit() {
     const a = this.getRandomInt(10, 99);
     const b = this.getRandomInt(10, 99);
@@ -931,12 +917,10 @@ class ProblemService {
     let expression, result;
     
     if(op1 === '÷') {
-      // a ÷ b + c
       const div_res = this.getRandomInt(2, 9);
       const temp_a = b * div_res;
       expression = `${temp_a} ÷ ${b} ${op2} ${c}`;
     } else {
-      // a × b + c
       expression = `${a} × ${b} ${op2} ${c}`;
     }
     
@@ -950,10 +934,6 @@ class ProblemService {
       options: this.generateOptions(result, 'medium')
     };
   }
-
-  /**
-   * 24. 千以内含括号的四则运算
-   */
   generateMixedOps_parenthesis() {
     const a = this.getRandomInt(2, 9);
     const op = this.getRandomItem(['+', '-']);
@@ -978,19 +958,15 @@ class ProblemService {
       options: this.generateOptions(result, 'hard')
     };
   }
-  
-  /**
-   * 25. 巧用交换律与结合律
-   */
   generateAssociativeLaw() {
     const a = this.getRandomInt(100, 800);
-    const b = (Math.floor(a / 100) + 1) * 100 - a; // 凑整
-    if (b === 0) return this.generateAssociativeLaw(); // 避免b=0
+    const b = (Math.floor(a / 100) + 1) * 100 - a; 
+    if (b === 0) return this.generateAssociativeLaw(); 
     
     const c = this.getRandomInt(100, 900);
     
     let nums = [a, b, c];
-    nums = this.shuffleArray(nums); // 打乱顺序
+    nums = this.shuffleArray(nums); 
     
     const expression = `${nums[0]} + ${nums[1]} + ${nums[2]}`;
     const result = a + b + c;
@@ -1003,15 +979,10 @@ class ProblemService {
       options: this.generateOptions(result, 'medium')
     };
   }
-  
-  /**
-   * 26. 巧用乘法分配律
-   */
   generateDistributiveLaw() {
     let expression, result;
     
     if (Math.random() > 0.5) {
-      // (a ± b) * c
       const c = this.getRandomInt(10, 99);
       const a = this.getRandomInt(10, 99);
       const b = this.getRandomInt(10, a);
@@ -1021,7 +992,6 @@ class ProblemService {
       result = (op === '+') ? (a + b) * c : (a - b) * c;
       
     } else {
-      // (a ± b) / c
       const c = this.getRandomInt(2, 9);
       const a = c * this.getRandomInt(10, 99);
       const b = c * this.getRandomInt(10, 99);
@@ -1039,10 +1009,6 @@ class ProblemService {
       options: this.generateOptions(result, 'medium')
     };
   }
-
-  /**
-   * 27. 比较千以内的算式大小比较
-   */
   generateAdvancedComparison() {
     const a = this.getRandomInt(10, 99);
     const b = this.getRandomInt(10, 99);
@@ -1065,19 +1031,14 @@ class ProblemService {
       options: ['>', '<', '=']
     };
   }
-  
-  /**
-   * 28. 近似数认识
-   */
   generateNumberRoundingUnit() {
     const units = [{name: '万', val: 10000}, {name: '亿', val: 100000000}];
     const unit = this.getRandomItem(units);
     
-    // 生成一个在单位值附近但又不精确的数
     const base = this.getRandomInt(1, 999);
     const num = base * unit.val + this.getRandomInt(Math.floor(unit.val / 10) * -4, Math.floor(unit.val / 10) * 4);
 
-    if (num <= 0) return this.generateNumberRoundingUnit(); // 避免负数
+    if (num <= 0) return this.generateNumberRoundingUnit(); 
     
     const expression = `${num} ≈ ? ${unit.name}`;
     const answer = Math.round(num / unit.val);
@@ -1091,8 +1052,354 @@ class ProblemService {
     };
   }
 
+  // --- ⬇️ 29-40 (第三批新增) ⬇️ ---
 
-  // --- ⬇️ 以下是辅助函数 (修改了 generateOptions, 增加了 getRandomItem) ⬇️ ---
+  /**
+   * 29. 10以内小数乘法
+   */
+  generateDecimalMultiplication_10() {
+    // 整数一位, 小数一位 (0.0 ~ 9.9)
+    const a = this.getRandomInt(0, 99) / 10;
+    const b = this.getRandomInt(0, 99) / 10;
+    const result = parseFloat((a * b).toFixed(2)); // 1.2 * 1.3 = 1.56
+    
+    return {
+      type: 'decimal_multiplication_10',
+      difficulty: 'medium',
+      expression: `${a} × ${b}`,
+      answer: result,
+      options: this.generateOptions(result, 'medium')
+    };
+  }
+
+  /**
+   * 30. 10以内小数除法
+   */
+  generateDecimalDivision_10() {
+    // We generate integers A,B in 1..99 representing tenths (A/10 ÷ B/10 == A/B).
+    // To ensure the quotient is a terminating decimal, after reducing A/B the
+    // denominator must have prime factors only 2 and/or 5. Retry until we find
+    // such a pair (bounded attempts), otherwise construct a fallback with a
+    // denominator that is a power of 2 and/or 5.
+    let A, B;
+    let attempts = 0;
+    const isTerminatingDenom = (d) => {
+      if (!d || d <= 0) return false;
+      while (d % 2 === 0) d = d / 2;
+      while (d % 5 === 0) d = d / 5;
+      return d === 1;
+    };
+
+    while (attempts < 500) {
+      A = this.getRandomInt(1, 99);
+      B = this.getRandomInt(1, 99);
+      const g = this.gcd(A, B);
+      const denom = Math.floor(B / g);
+      if (isTerminatingDenom(denom)) break;
+      attempts++;
+    }
+
+    // Fallback: construct A/B with denominator of form 2^i * 5^j
+    if (!A || !B || !isTerminatingDenom(Math.floor(B / this.gcd(A, B)))) {
+      const denomCandidates = [];
+      for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 6; j++) {
+          const d = Math.pow(2, i) * Math.pow(5, j);
+          if (d <= 99) denomCandidates.push(d);
+        }
+      }
+      const d = this.getRandomItem(denomCandidates);
+      const kMax = Math.floor(99 / d) || 1;
+      const k = this.getRandomInt(1, kMax);
+      B = d * k;
+      const aMax = Math.floor(99 / k) || 1;
+      A = this.getRandomInt(1, aMax) * k;
+    }
+
+    const a = parseFloat((A / 10).toFixed(2));
+    const b = parseFloat((B / 10).toFixed(2));
+    const result = parseFloat((a / b).toFixed(2)); // present answer with 2 decimals
+
+    return {
+      type: 'decimal_division_10',
+      difficulty: 'medium',
+      expression: `${a} ÷ ${b}`,
+      answer: result,
+      options: this.generateOptions(result, 'medium')
+    };
+  }
+
+  /**
+   * 31. 小数除法(商保留一位小数)
+   */
+  generateDecimalDivision_round_1() {
+    // 要求：被除数 < 20（小数），除数 < 10（小数），并且保证题目仅为 a ÷ b 形式，商保留一位小数。
+    // 我们生成两位小数（精确到分），并确保 a 和 b 至少有一位小数（避免生成像 28 ÷ 7 × 7 这类错误表达）。
+    let a, b, attempts = 0;
+    while (attempts < 200) {
+      const intA = this.getRandomInt(0, 19); // 整数部分 0..19
+      const fracA = this.getRandomInt(1, 99); // 小数部分 01..99 确保不是纯整数
+      const intB = this.getRandomInt(0, 9); // 整数部分 0..9
+      const fracB = this.getRandomInt(1, 99); // 小数部分 01..99
+
+      a = parseFloat((intA + fracA / 100).toFixed(2));
+      b = parseFloat((intB + fracB / 100).toFixed(2));
+
+      // 排除 b 为 0，且保证 a >= 0.01, b >= 0.01
+      if (b === 0) { attempts++; continue; }
+      // 确保 a < 20 且 b < 10
+      if (a >= 20 || b >= 10) { attempts++; continue; }
+      // 避免 a 和 b 接近导致极端结果（可选），接受通过
+      break;
+    }
+
+    // 若未找到有效组合，则使用较简单的安全值
+    if (!a || !b) {
+      a = 12.34;
+      b = 0.4;
+    }
+
+    const result = a / b;
+    const answer = parseFloat(result.toFixed(1)); // 保留一位小数
+
+    return {
+      type: 'decimal_division_round_1',
+      difficulty: 'medium',
+      expression: `${a} ÷ ${b} ≈ ? (保留一位小数)`,
+      answer: answer,
+      options: this.generateOptions(answer, 'medium')
+    };
+  }
+
+  /**
+   * 32. 平行四边形面积计算
+   */
+  generateParallelogramArea() {
+    const base = this.getRandomInt(1, 100);
+    const height = this.getRandomInt(1, 100);
+    const answer = base * height;
+    
+    return {
+      type: 'parallelogram_area',
+      difficulty: 'simple',
+      expression: `平行四边形的底是${base}cm, 高是${height}cm, 面积是? cm²`,
+      answer: answer,
+      options: this.generateOptions(answer, 'medium')
+    };
+  }
+
+  /**
+   * 33. 三角形面积的计算
+   */
+  generateTriangleArea() {
+    const base = this.getRandomInt(1, 100);
+    const height = this.getRandomInt(1, 100);
+    const answer = parseFloat(((base * height) / 2).toFixed(2)); // 允许 0.5
+    
+    return {
+      type: 'triangle_area',
+      difficulty: 'simple',
+      expression: `三角形的底边是${base}cm, 高是${height}cm, 面积是? cm²`,
+      answer: answer,
+      options: this.generateOptions(answer, 'medium')
+    };
+  }
+
+  /**
+   * 34. 梯形面积的计算
+   */
+  generateTrapezoidArea() {
+    const topBase = this.getRandomInt(1, 100);
+    const bottomBase = this.getRandomInt(1, 100);
+    const height = this.getRandomInt(1, 100);
+    const answer = parseFloat((((topBase + bottomBase) * height) / 2).toFixed(2));
+    
+    return {
+      type: 'trapezoid_area',
+      difficulty: 'medium',
+      expression: `梯形的上底是${topBase}cm, 下底是${bottomBase}cm, 高是${height}cm, 面积是? cm²`,
+      answer: answer,
+      options: this.generateOptions(answer, 'medium')
+    };
+  }
+
+  /**
+   * 35. 圆面积的计算
+   */
+  generateCircleArea() {
+    const radius = this.getRandomInt(1, 30);
+    const pi = 3.14;
+    const answer = parseFloat((pi * radius * radius).toFixed(2));
+    
+    return {
+      type: 'circle_area',
+      difficulty: 'medium',
+      expression: `圆的半径是${radius}cm, 面积是? cm² (π取3.14)`,
+      answer: answer,
+      options: this.generateOptions(answer, 'medium')
+    };
+  }
+  
+  /**
+   * 36. 简单方程练习
+   */
+  generateSimpleEquation() {
+    // ax + b = c
+    const a = this.getRandomInt(2, 9);
+    const x = this.getRandomInt(1, 10);
+    const b = this.getRandomInt(1, 20);
+    const c = a * x + b;
+    
+    return {
+      type: 'simple_equation',
+      difficulty: 'medium',
+      expression: `${a}x + ${b} = ${c}, x=?`,
+      answer: x,
+      options: this.generateOptions(x, 'easy')
+    };
+  }
+
+  /**
+   * 37. 圆柱的体积计算
+   */
+  generateCylinderVolume() {
+    const radius = this.getRandomInt(1, 20);
+    const height = this.getRandomInt(1, 20);
+    const pi = 3.14;
+    const answer = parseFloat((pi * radius * radius * height).toFixed(2));
+    
+    return {
+      type: 'cylinder_volume',
+      difficulty: 'medium',
+      expression: `圆柱的半径是${radius}cm, 高是${height}cm, 体积是? cm³ (π取3.14)`,
+      answer: answer,
+      options: this.generateOptions(answer, 'hard')
+    };
+  }
+
+  /**
+   * 38. 球体积计算
+   */
+  generateSphereVolume() {
+    const radius = this.getRandomInt(1, 20);
+    const pi = 3.14;
+    // V = (4/3) * pi * r^3
+    const answer = parseFloat(((4 / 3) * pi * Math.pow(radius, 3)).toFixed(2));
+    
+    return {
+      type: 'sphere_volume',
+      difficulty: 'medium',
+      expression: `球的半径是${radius}cm, 体积是? cm³ (π取3.14, V=4/3πr³)`,
+      answer: answer,
+      options: this.generateOptions(answer, 'hard')
+    };
+  }
+
+  /**
+   * 39. 带分数的加减法
+   */
+  generateFractionAddSub() {
+    let n1 = this.getRandomInt(1, 9);
+    let d1 = this.getRandomInt(2, 10);
+    let n2 = this.getRandomInt(1, 9);
+    let d2 = this.getRandomInt(2, 10);
+    
+    // 确保是真分数
+    if (n1 >= d1) n1 = this.getRandomInt(1, d1 -1);
+    if (n2 >= d2) n2 = this.getRandomInt(1, d2 -1);
+
+    const op = this.getRandomItem(['+', '-']);
+    
+    let resN, resD;
+    
+    if (op === '+') {
+      resN = n1 * d2 + n2 * d1;
+      resD = d1 * d2;
+    } else {
+      // 确保结果为正
+      if ((n1 / d1) < (n2 / d2)) {
+        [n1, n2] = [n2, n1];
+        [d1, d2] = [d2, d1];
+      }
+      resN = n1 * d2 - n2 * d1;
+      resD = d1 * d2;
+    }
+    
+    const answer = this.simplifyFraction(resN, resD);
+    
+    return {
+      type: 'fraction_add_sub',
+      difficulty: 'medium',
+      expression: `${n1}/${d1} ${op} ${n2}/${d2}`,
+      answer: answer,
+      options: this.generateOptions(this.calculateExpression(answer), 'medium') // 选项用小数值
+    };
+  }
+
+  /**
+   * 40. 带分数的乘法
+   */
+  generateFractionMultiplication() {
+    let n1 = this.getRandomInt(1, 9);
+    let d1 = this.getRandomInt(2, 10);
+    let n2 = this.getRandomInt(1, 9);
+    let d2 = this.getRandomInt(2, 10);
+    
+    // 确保是真分数
+    if (n1 >= d1) n1 = this.getRandomInt(1, d1 -1);
+    if (n2 >= d2) n2 = this.getRandomInt(1, d2 -1);
+
+    const resN = n1 * n2;
+    const resD = d1 * d2;
+    
+    const answer = this.simplifyFraction(resN, resD);
+
+    return {
+      type: 'fraction_mul',
+      difficulty: 'medium',
+      expression: `${n1}/${d1} × ${n2}/${d2}`,
+      answer: answer,
+      options: this.generateOptions(this.calculateExpression(answer), 'medium') // 选项用小数值
+    };
+  }
+
+
+  // --- ⬇️ 以下是辅助函数 (新增了 gcd 和 simplifyFraction, 修改了 calculateExpression, validateAnswer) ⬇️ ---
+
+  /**
+   * 计算最大公约数 (Helper for fractions)
+   */
+  gcd(a, b) {
+    a = Math.abs(a);
+    b = Math.abs(b);
+    while(b) {
+      [a, b] = [b, a % b];
+    }
+    return a;
+  }
+
+  /**
+   * 分数化简 (Helper for fractions)
+   */
+  simplifyFraction(numerator, denominator) {
+    if (denominator === 0) return 'Undefined';
+    if (numerator === 0) return '0';
+    
+    const common = this.gcd(numerator, denominator);
+    let n = numerator / common;
+    let d = denominator / common;
+    
+    // 确保负号在分子上
+    if (d < 0) {
+      d = -d;
+      n = -n;
+    }
+    
+    if (d === 1) return n.toString(); // 结果是整数
+    
+    return `${n}/${d}`;
+  }
+  
 
   generateOptions(correctAnswer, difficulty, isFillBlank = false) {
     const options = new Set([correctAnswer]); // 使用Set确保唯一性
@@ -1112,7 +1419,6 @@ class ProblemService {
         range = 3;
     }
     
-    // 确保range最小为1，避免在correctAnswer为0时卡死
     if (range === 0) range = 1;
     
     while (options.size < 4) {
@@ -1124,21 +1430,19 @@ class ProblemService {
       } else {
         const variation = this.getRandomInt(-range, range);
         
-        // 确保 variation 不为 0
         if (variation === 0) {
            option = correctAnswer + (Math.random() > 0.5 ? 1 : -1);
         } else {
            option = correctAnswer + variation;
         }
 
-        // 处理小数
         if (typeof correctAnswer === 'number' && !Number.isInteger(correctAnswer)) {
             const decimalPlaces = correctAnswer.toString().split('.')[1]?.length || 2;
             option = parseFloat(option.toFixed(decimalPlaces));
         }
 
         if (difficulty === 'easy' && option < 0) {
-          option = Math.abs(option); // 简单难度避免负数选项
+          option = Math.abs(option);
         }
       }
       
@@ -1152,12 +1456,17 @@ class ProblemService {
     const jsExpression = expression
       .replace(/[×＊]/g, '*') 
       .replace(/[÷∕]/g, '/')
-      .replace(/cm|cm²|kg|吨|秒|分|时|元|角/g, '') // 移除单位
-      .replace(/≈/g, '') // 移除约等于
-      .replace(/（/g, '(') // 修正括号
+      .replace(/cm|cm²|cm³|kg|吨|秒|分|时|元|角/g, '') // 移除了 cm³
+      .replace(/≈/g, '') 
+      .replace(/（/g, '(') 
       .replace(/）/g, ')');
     
     try {
+      // 捕获 "5/6" 这样的分数表达式
+      const fractionMatch = jsExpression.trim().match(/^(-?\d+)\/(-?\d+)$/);
+      if (fractionMatch) {
+        return parseFloat(fractionMatch[1]) / parseFloat(fractionMatch[2]);
+      }
       return new Function(`return ${jsExpression}`)();
     } catch (error) {
       console.error('表达式计算错误:', expression, error);
@@ -1170,9 +1479,6 @@ class ProblemService {
     return ops[Math.floor(Math.random() * ops.length)];
   }
 
-  /**
-   * 从数组中随机获取一个元素
-   */
   getRandomItem(array) {
     return array[Math.floor(Math.random() * array.length)];
   }
@@ -1194,23 +1500,23 @@ class ProblemService {
     return `prob_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
+  /**
+   * 答案验证函数
+   */
   validateAnswer(problem, userAnswer) {
     let isCorrect = false;
 
-    // 处理带余数的除法：兼容多种前端提交格式
+    // 1. 处理带余数的除法
     if (problem.hasOwnProperty('remainder')) {
       let userQuotient = null;
       let userRemainder = null;
-
-      // 如果前端传来的是对象（如 {quotient, remainder}）
+      
       if (userAnswer && typeof userAnswer === 'object') {
-        userQuotient = Number(userAnswer.quotient ?? userAnswer.q ?? userAnswer.qo ?? userAnswer.quotientAnswer ?? null);
-        // 有时候前端把余数字段命名为 remainder / r / rem
-        userRemainder = Number(userAnswer.remainder ?? userAnswer.r ?? userAnswer.rem ?? null);
+        userQuotient = Number(userAnswer.quotient ?? userAnswer.q ?? null);
+        userRemainder = Number(userAnswer.remainder ?? userAnswer.r ?? null);
       } else if (typeof userAnswer === 'number') {
         userQuotient = Number(userAnswer);
       } else if (typeof userAnswer === 'string') {
-        // 支持多种字符串格式："商...余数"、"商 余 余数"、"商,余数"、只是商
         const s = userAnswer.trim();
         if (s.includes('...')) {
           const parts = s.split('...').map(p => p.trim());
@@ -1218,11 +1524,9 @@ class ProblemService {
           userRemainder = parts[1] !== undefined ? Number(parts[1]) : null;
         } else if (s.includes('余')) {
           const parts = s.split(/余|\s+/).filter(Boolean);
-          // parts 可能是 ["商","余数"] 或包含其它分隔
           userQuotient = Number(parts[0]);
           userRemainder = parts[1] !== undefined ? Number(parts[1]) : null;
         } else {
-          // 尝试提取数字序列
           const nums = s.match(/-?\d+/g);
           if (nums && nums.length > 0) {
             userQuotient = Number(nums[0]);
@@ -1231,74 +1535,69 @@ class ProblemService {
         }
       }
 
-      // 如果前端在 submitted 对象上单独传了 remainder 字段（路由中会带上），优先使用它
-      if (problem.remainder !== undefined && (userRemainder === null || Number.isNaN(userRemainder))) {
-        // 如果 userAnswer 没有余数，但提交体中有 remainder 字段，则把它作为期望的 remainder（不覆盖用户提交）
-        // 不修改 userRemainder，因为这是用户填写的，如果未填则保持 null
-      }
-
-      // 比较：如果用户提供了余数则同时比较商和余数；否则只比较商
       const hasValidQuot = Number.isFinite(userQuotient) && !Number.isNaN(userQuotient);
       const hasValidRem = Number.isFinite(userRemainder) && !Number.isNaN(userRemainder);
 
       if (hasValidQuot && hasValidRem) {
         isCorrect = Math.abs(problem.answer - userQuotient) < 0.0001 && Math.abs(problem.remainder - userRemainder) < 0.0001;
       } else if (hasValidQuot) {
+        // 如果用户只提供了商（或无法解析余数），则只比较商
         isCorrect = Math.abs(problem.answer - userQuotient) < 0.0001;
       } else {
-        // 无法解析用户答案为数字 -> 判错
         isCorrect = false;
       }
 
       return isCorrect;
     }
 
+    // 2. 处理字符串答案 (比较, 填空, 分数)
     if (problem.type === 'comparison') {
       isCorrect = userAnswer === problem.answer;
-    } else if (problem.type === 'fill_blank' && typeof problem.answer === 'string') {
+    } 
+    // --- 新增: 处理分数答案 ---
+    else if (problem.type === 'fraction_add_sub' || problem.type === 'fraction_mul') {
+      isCorrect = String(userAnswer).trim() === problem.answer.trim();
+    }
+    // ---
+    else if (problem.type === 'fill_blank' && typeof problem.answer === 'string') {
       isCorrect = userAnswer === problem.answer;
-    } else if (problem.type === 'decimal_rounding' || String(problem.type).indexOf('round') !== -1) {
-      // 处理小数保留题：允许用户输入如 41.10 与 41.1 等等等价表达
+    } 
+    
+    // 3. 处理小数保留题 (复用原逻辑)
+    else if (problem.type === 'decimal_rounding' || String(problem.expression || '').includes('保留')) {
       const numAnswer = typeof problem.answer === 'number' ? problem.answer : parseFloat(problem.answer);
       const numUser = typeof userAnswer === 'number' ? userAnswer : parseFloat(userAnswer);
       if (!Number.isFinite(numUser) || !Number.isFinite(numAnswer)) {
         isCorrect = false;
       } else {
-        // 从题干中提取保留位数：例如 "(保留1位小数)" 或 "保留1位小数"
         let decimals = null;
         try {
           const expr = String(problem.expression || '');
-          // 支持阿拉伯数字和中文数字（如 一 二 三 四 五 六 七 八 九 十 两）
           const m = expr.match(/保留\s*([0-9一二三四五六七八九十两]+)\s*位/);
           if (m && m[1]) {
             const raw = m[1];
-            // 如果是中文数字，进行映射
             const cnMap = { '一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10,'两':2 };
             if (/^[0-9]+$/.test(raw)) {
               decimals = parseInt(raw);
             } else if (raw.length === 1 && cnMap[raw]) {
               decimals = cnMap[raw];
-            } else {
-              // 对于像 "两" 或更复杂的中文，尝试逐字累加（简单处理）
-              let acc = 0;
-              for (const ch of raw) {
-                if (cnMap[ch]) acc += cnMap[ch];
-              }
-              if (acc > 0) decimals = acc;
             }
           }
         } catch (e) {
           decimals = null;
         }
-        // 默认比较到 2 位小数的容差，如果能确定 decimals 则按该位比较
-        if (decimals === null || Number.isNaN(decimals)) decimals = 2;
+        
+        if (decimals === null || Number.isNaN(decimals)) decimals = 2; // 默认
 
         const factor = Math.pow(10, decimals);
         const roundedUser = Math.round(numUser * factor) / factor;
         const roundedAnswer = Math.round(numAnswer * factor) / factor;
         isCorrect = Math.abs(roundedUser - roundedAnswer) < 0.0001;
       }
-    } else {
+    } 
+    
+    // 4. 处理所有其他数字答案
+    else {
       const numAnswer = typeof problem.answer === 'number' ? problem.answer : parseFloat(problem.answer);
       const numUserAnswer = typeof userAnswer === 'number' ? userAnswer : parseFloat(userAnswer);
       isCorrect = Math.abs(numAnswer - numUserAnswer) < 0.0001;
@@ -1346,7 +1645,20 @@ class ProblemService {
       'associative_law': '巧用结合律',
       'distributive_law': '巧用分配律',
       'advanced_comparison': '算式大小比较',
-      'number_rounding_unit': '近似数认识'
+      'number_rounding_unit': '近似数认识',
+      // 29-40
+      'decimal_multiplication_10': '10以内小数乘法',
+      'decimal_division_10': '10以内小数除法',
+      'decimal_division_round_1': '小数除法(保留一位)',
+      'parallelogram_area': '平行四边形面积',
+      'triangle_area': '三角形面积',
+      'trapezoid_area': '梯形面积',
+      'circle_area': '圆面积',
+      'simple_equation': '简单方程',
+      'cylinder_volume': '圆柱体积',
+      'sphere_volume': '球体积',
+      'fraction_add_sub': '分数加减法',
+      'fraction_mul': '分数乘法'
     };
     
     return descriptions[type] || '综合';
