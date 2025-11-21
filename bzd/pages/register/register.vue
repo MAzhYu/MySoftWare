@@ -25,7 +25,7 @@
         type="password"
       />
 
-      <picker :range="roles" v-model="roleIndex" @change="onRoleChange">
+      <picker :range="roles" :value="roleIndex" @change="onRoleChange">
         <view class="picker-box">
           <text>角色：{{ roles[roleIndex] }}</text>
         </view>
