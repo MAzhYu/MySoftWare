@@ -56,7 +56,6 @@ export default {
     this.roomData = data
 
     this.socket = io(BASE_URL, { transports: ['websocket'], reconnection: true })
-
     this.socket.on('connect', () => {
       if (this.roomData.mode === 'create') {
         this.socket.emit('createRoom', {
