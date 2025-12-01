@@ -2,7 +2,7 @@
 // Note: when running in emulator or on-device, `localhost` may refer to the device
 // itself rather than the dev machine. We keep localhost as default for H5, but
 // the request wrapper below will attempt common emulator host aliases on failure.
-const BASE_URL = 'http://localhost:5000'
+const BASE_URL = 'http://116.62.125.154:5000'
 
 export const api = {
   login: `${BASE_URL}/api/auth/login`,
