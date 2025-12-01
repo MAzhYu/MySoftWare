@@ -122,11 +122,21 @@ socket.on('joinRoom', (roomCode, playerData = {}) => {
     const room = rooms[roomCode];
     if (!room) return;
 
-    room.readyCount = (room.readyCount || 0) + 1;
-    socket.to(roomCode).emit('otherReady');
+    // 标记当前玩家为准备状态
+    const player = room.players.find(p => p.id === socket.id);
+    if (player) {
+      player.ready = true;
+    }
 
-    if (room.readyCount >= 2) {
-      room.readyCount = 0;
+    // 广播更新后的玩家列表给房间内所有人
+    io.to(roomCode).emit('playerReady', {
+      players: room.players
+    });
+
+    // 检查是否所有人都准备好
+    const allReady = room.players.every(p => p.ready);
+    if (allReady && room.players.length === 2) {
+      // 重置游戏状态
       room.scores = {};
       room.finished = {};
       room.finalized = false;
@@ -134,12 +144,10 @@ socket.on('joinRoom', (roomCode, playerData = {}) => {
       io.to(roomCode).emit('startPK');
       console.log(`🚀 PK started in room ${roomCode}`);
 
-      // 启动全局倒计时（30秒后兜底结算）
       // 启动全局倒计时，根据房间配置 timeLimit 动态设置
-const limit = (room.config?.timeLimit || 30) * 1000;
-clearTimeout(room.timer);
-room.timer = setTimeout(() => finalizeRoom(roomCode), limit);
-
+      const limit = (room.config?.timeLimit || 30) * 1000;
+      clearTimeout(room.timer);
+      room.timer = setTimeout(() => finalizeRoom(roomCode), limit);
     }
   });
 
@@ -148,13 +156,15 @@ room.timer = setTimeout(() => finalizeRoom(roomCode), limit);
     socket.join(roomCode);
     const room = rooms[roomCode];
     if (room) {
-      if (!room.players.includes(socket.id)) {
-        if (room.players.length < 2) room.players.push(socket.id);
-        else {
+      const playerExists = room.players.find(p => p.id === socket.id);
+      if (!playerExists) {
+        if (room.players.length < 2) {
+          room.players.push({ id: socket.id, ready: false });
+        } else {
           const memberSet = io.sockets.adapter.rooms.get(roomCode) || new Set();
           for (let i = 0; i < room.players.length; i++) {
-            if (!memberSet.has(room.players[i])) {
-              room.players[i] = socket.id;
+            if (!memberSet.has(room.players[i].id)) {
+              room.players[i].id = socket.id;
               break;
             }
           }
@@ -222,9 +232,10 @@ socket.on('acceptRematch', (roomCode) => {
   // 断线处理
   socket.on('disconnect', () => {
     for (const [roomCode, room] of Object.entries(rooms)) {
-      if (room.players.includes(socket.id)) {
+      const playerIndex = room.players.findIndex(p => p.id === socket.id);
+      if (playerIndex !== -1) {
         io.to(roomCode).emit('playerLeft', { socketId: socket.id });
-        room.players = room.players.filter(id => id !== socket.id);
+        room.players.splice(playerIndex, 1);
         room._lastDisconnectAt = Date.now();
 
         clearTimeout(room._cleanupTimer);
@@ -250,8 +261,8 @@ socket.on('acceptRematch', (roomCode) => {
     const [p1, p2] = room.players;
     if (!p1 || !p2) return;
 
-    const s1 = room.scores[p1] || 0;
-    const s2 = room.scores[p2] || 0;
+    const s1 = room.scores[p1.id] || 0;
+    const s2 = room.scores[p2.id] || 0;
 
     let result1, result2;
     if (s1 > s2) {
@@ -265,15 +276,15 @@ socket.on('acceptRematch', (roomCode) => {
     }
 
     const memberSet = io.sockets.adapter.rooms.get(roomCode) || new Set();
-    if (p1 && memberSet.has(p1))
-      io.to(p1).emit('finalResult', { myScore: s1, otherScore: s2, result: result1 });
-    if (p2 && memberSet.has(p2))
-      io.to(p2).emit('finalResult', { myScore: s2, otherScore: s1, result: result2 });
+    if (p1.id && memberSet.has(p1.id))
+      io.to(p1.id).emit('finalResult', { myScore: s1, otherScore: s2, result: result1 });
+    if (p2.id && memberSet.has(p2.id))
+      io.to(p2.id).emit('finalResult', { myScore: s2, otherScore: s1, result: result2 });
 
     io.to(roomCode).emit('finalResultBroadcast', {
       players: [
-        { socketId: p1, score: s1 },
-        { socketId: p2, score: s2 }
+        { socketId: p1.id, score: s1 },
+        { socketId: p2.id, score: s2 }
       ],
       draw: s1 === s2
     });

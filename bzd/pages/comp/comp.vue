@@ -1,5 +1,7 @@
 <template>
   <view class="container">
+    <!-- 状态栏占位 -->
+    <view class="status-bar"></view>
     <view class="header">
       <text class="room">🏠 房间号：{{ roomData.roomCode }}</text>
       <text class="timer">⏱️ {{ timeLeft }}s</text>
@@ -7,14 +9,14 @@
 
     <view class="players">
       <view class="player">
-        <!-- <image :src="players[0]?.avatar || '/static/icons/student.png'" class="avatar" /> -->
-        <text class="name">{{ players[0]?.name || '我' }}</text>
+        <!-- <image :src="selfPlayer?.avatar || '/static/icons/student.png'" class="avatar" /> -->
+        <text class="name">{{ selfPlayer?.name || '我' }}</text>
         <text>{{ myScore }} 分</text>
       </view>
       <view class="player">
-        <!-- <image :src="players[1]?.avatar || '/static/icons/robot.png'" class="avatar" /> -->
-        <text class="name">{{ players[1]?.name || '对手' }}</text>
-        <text>{{ otherScore }} 分</text>
+        <!-- <image :src="otherPlayer?.avatar || '/static/icons/robot.png'" class="avatar" /> -->
+        <text class="name">{{ otherPlayer?.name || '对手' }}</text>
+        <text>?</text>
       </view>
     </view>
 
@@ -34,7 +36,11 @@
 </template>
 
 <script>
+// ✅ 使用条件编译：H5用socket.io，APP用uni原生WebSocket
+// #ifdef H5
 import io from 'socket.io-client'
+// #endif
+
 const BASE_URL = 'http://116.62.125.154:5000'
 
 export default {
@@ -42,6 +48,8 @@ export default {
     return {
       socket: null,
       roomData: {},
+      players: [],
+      selfIndex: -1,
       problems: [],
       index: 0,
       answer: '',
@@ -55,69 +63,229 @@ export default {
       resultText: '',
       rematchTimer: null,
       selfId: '',
-      receivedFinal: false
+      // #ifdef APP-PLUS
+      socketTask: null,
+      // #endif
+    }
+  },
+  computed: {
+    selfPlayer() {
+      return this.selfIndex >= 0 ? this.players[this.selfIndex] : null
+    },
+    otherPlayer() {
+      if (this.selfIndex < 0 || this.players.length < 2) return null
+      return this.players[this.selfIndex === 0 ? 1 : 0]
     }
   },
   onLoad(option) {
+    // ✅ 检查登录状态
+    if (!this.checkLogin()) return
+    
 	this.user = uni.getStorageSync('user') || {}
 
     const data = JSON.parse(decodeURIComponent(option.data))
     this.roomData = data
-	this.players = data.players || []
-    this.socket = io(BASE_URL, { transports: ['websocket'], reconnection: true })
-
-    this.socket.on('connect', () => { this.selfId = this.socket.id })
-
-    this.socket.emit('joinComp', this.roomData.roomCode)
-
-    this.socket.on('updateScore', score => { this.otherScore = score })
-    this.socket.on('finalResult', data => { this.receivedFinal = true; this.endPK(data) })
-
-    this.socket.on('finalResultBroadcast', data => {
-      if (this.receivedFinal) return
-      const players = data.players || []
-      const me = players.find(p => p.socketId === this.selfId)
-      const other = players.find(p => p.socketId !== this.selfId)
-      const my = me ? me.score : 0
-      const ot = other ? other.score : 0
-      let result = '🤝 Draw!'
-      if (my > ot) result = '🎉 You win!'
-      else if (my < ot) result = '😢 You lose!'
-      this.endPK({ myScore: my, otherScore: ot, result })
-    })
-
-    this.socket.on('receiveRematchInvite', () => {
-      uni.showModal({
-        title: '再战邀请',
-        content: '对方邀请你再战！是否接受？',
-        confirmText: '接受',
-        cancelText: '拒绝',
-        success: (res) => {
-          if (res.confirm) this.socket.emit('acceptRematch', this.roomData.roomCode)
-          else this.socket.emit('declineRematch', this.roomData.roomCode)
-        }
-      })
-    })
-
-    this.socket.on('startRematch', () => {
-      this.resultText = '🕒 再战即将开始...'
-      this.startRematchCountdown()
-    })
-
-    this.socket.on('rematchDeclined', () => {
-      uni.showToast({ title: '对方拒绝了再战', icon: 'none' })
-    })
+    this.players = data.players || []
+    this.selfIndex = data.selfIndex >= 0 ? data.selfIndex : -1
+    
+    console.log('PK页面初始化，selfIndex:', this.selfIndex, 'players:', this.players)
+    
+    // #ifdef H5
+    this.initSocketIO()
+    // #endif
+    
+    // #ifdef APP-PLUS
+    this.initUniWebSocket()
+    // #endif
 
     this.generateProblems()
     this.startPK()
   },
   methods: {
+    // #ifdef H5
+    initSocketIO() {
+      this.socket = io(BASE_URL, { transports: ['websocket'], reconnection: true })
+
+      this.socket.on('connect', () => { 
+        this.selfId = this.socket.id
+        console.log('PK Socket.IO连接成功，ID:', this.selfId)
+        this.socket.emit('joinComp', this.roomData.roomCode)
+      })
+
+      this.socket.on('updateScore', data => {
+        console.log('收到updateScore:', data)
+        if (data.socketId !== this.selfId) {
+          this.otherScore = data.score
+        }
+      })
+      
+      this.socket.on('finalResult', data => { 
+        console.log('收到finalResult:', data)
+        this.endPK(data)
+      })
+
+      this.socket.on('receiveRematchInvite', () => {
+        uni.showModal({
+          title: '再战邀请',
+          content: '对方邀请你再战！是否接受？',
+          confirmText: '接受',
+          cancelText: '拒绝',
+          success: (res) => {
+            if (res.confirm) this.socket.emit('acceptRematch', this.roomData.roomCode)
+            else this.socket.emit('declineRematch', this.roomData.roomCode)
+          }
+        })
+      })
+
+      this.socket.on('startRematch', () => {
+        this.resultText = '🕒 再战即将开始...'
+        this.startRematchCountdown()
+      })
+
+      this.socket.on('rematchDeclined', () => {
+        uni.showToast({ title: '对方拒绝了再战', icon: 'none' })
+      })
+    },
+    // #endif
+    
+    // #ifdef APP-PLUS
+    initUniWebSocket() {
+      const wsUrl = BASE_URL.replace('http://', 'ws://').replace('https://', 'wss://') + '/socket.io/?EIO=4&transport=websocket'
+      console.log('PK APP端WebSocket连接地址:', wsUrl)
+      
+      this.socketTask = uni.connectSocket({
+        url: wsUrl,
+        success: () => {
+          console.log('PK WebSocket连接请求已发送')
+        }
+      })
+      
+      this.socketTask.onOpen(() => {
+        console.log('PK WebSocket连接已打开')
+        this.socketTask.send({
+          data: '40',
+          success: () => {
+            console.log('PK 发送握手消息成功')
+            setTimeout(() => {
+              this.socketTask.send({
+                data: `42${JSON.stringify(['joinComp', this.roomData.roomCode])}`,
+                success: () => {
+                  console.log('PK 发送joinComp成功')
+                }
+              })
+            }, 100)
+          }
+        })
+      })
+      
+      this.socketTask.onMessage((res) => {
+        console.log('PK 收到WebSocket消息:', res.data)
+        try {
+          const data = res.data
+          
+          // 获取 socket ID
+          if (data.startsWith('40')) {
+            const jsonStr = data.substring(2)
+            const sessionData = JSON.parse(jsonStr)
+            this.selfId = sessionData.sid
+            console.log('PK 获取到socket ID:', this.selfId)
+            return
+          }
+          
+          if (data.startsWith('42')) {
+            const jsonStr = data.substring(2)
+            const [eventName, eventData] = JSON.parse(jsonStr)
+            console.log('PK 解析事件:', eventName, eventData)
+            
+            if (eventName === 'updateScore') {
+              console.log('PK 收到updateScore，selfId:', this.selfId, 'data:', eventData)
+              if (eventData.socketId !== this.selfId) {
+                this.otherScore = eventData.score
+                console.log('PK 更新对方分数为:', eventData.score)
+              }
+            }
+            else if (eventName === 'finalResult') {
+              console.log('PK 收到finalResult:', eventData)
+              this.endPK(eventData)
+            }
+            else if (eventName === 'receiveRematchInvite') {
+              uni.showModal({
+                title: '再战邀请',
+                content: '对方邀请你再战！是否接受？',
+                confirmText: '接受',
+                cancelText: '拒绝',
+                success: (res) => {
+                  if (res.confirm) {
+                    this.socketTask.send({ data: `42${JSON.stringify(['acceptRematch', this.roomData.roomCode])}` })
+                  } else {
+                    this.socketTask.send({ data: `42${JSON.stringify(['declineRematch', this.roomData.roomCode])}` })
+                  }
+                }
+              })
+            }
+            else if (eventName === 'startRematch') {
+              this.resultText = '🕒 再战即将开始...'
+              this.startRematchCountdown()
+            }
+            else if (eventName === 'rematchDeclined') {
+              uni.showToast({ title: '对方拒绝了再战', icon: 'none' })
+            }
+          }
+        } catch (e) {
+          console.error('PK 解析消息失败:', e, res.data)
+        }
+      })
+      
+      this.socketTask.onError((err) => {
+        console.error('PK WebSocket错误:', err)
+      })
+      
+      this.socketTask.onClose(() => {
+        console.log('PK WebSocket连接已关闭')
+      })
+    },
+    
+    emitSocketEvent(eventName, data) {
+      console.log('PK 发送事件:', eventName, data)
+      // #ifdef H5
+      if (this.socket) {
+        this.socket.emit(eventName, data)
+      }
+      // #endif
+      
+      // #ifdef APP-PLUS
+      if (this.socketTask) {
+        const message = `42${JSON.stringify([eventName, data])}`
+        console.log('PK 发送消息:', message)
+        this.socketTask.send({ data: message })
+      }
+      // #endif
+    },
+    // #endif
+    /** ✅ 检查登录状态 */
+    checkLogin() {
+      const token = uni.getStorageSync('token')
+      if (!token) {
+        uni.showModal({
+          title: '提示',
+          content: '请先登录后参与PK',
+          showCancel: false,
+          success: () => {
+            uni.switchTab({
+              url: '/pages/tabbar/me/me'
+            })
+          }
+        })
+        return false
+      }
+      return true
+    },
+    
     generateProblems() {
-      // ✅ 用相同的随机种子，保证两端一致
-	  const seed = this.roomData.config?.seed || this.roomData.seed || 12345
+      const seed = this.roomData.config?.seed || this.roomData.seed || Date.now()
       const random = this.seededRandom(seed)
     
-      const count = this.roomData.questionCount || 10
+      const count = this.roomData.config?.questionCount || 10
       const problems = []
     
       for (let i = 0; i < count; i++) {
@@ -147,7 +315,12 @@ export default {
       const correct = parseInt(this.answer) === this.currentProblem.answer
       if (correct) {
         this.myScore++
-        this.socket.emit('updateScore', { roomCode: this.roomData.roomCode, score: this.myScore })
+        console.log('答对了，我的分数:', this.myScore, 'selfId:', this.selfId)
+        this.emitSocketEvent('updateScore', { 
+          roomCode: this.roomData.roomCode, 
+          score: this.myScore,
+          socketId: this.selfId
+        })
       }
       this.answer = ''
       this.nextProblem()
@@ -160,11 +333,15 @@ export default {
         clearInterval(this.timer)
         this.isOver = true
         this.resultText = '正在结算...'
-        this.socket.emit('playerFinished', { roomCode: this.roomData.roomCode, score: this.myScore })
+        console.log('题目做完，发送playerFinished，我的分数:', this.myScore, 'selfId:', this.selfId)
+        this.emitSocketEvent('playerFinished', { 
+          roomCode: this.roomData.roomCode, 
+          score: this.myScore,
+          socketId: this.selfId
+        })
       }
     },
     startPK() {
-      // ✅ 修复这里
       this.timeLeft = this.roomData.config?.timeLimit || 15
     
       clearInterval(this.timer)
@@ -176,23 +353,29 @@ export default {
           clearInterval(this.timer)
           this.isOver = true
           this.resultText = '正在结算...'
-          this.socket.emit('playerFinished', { roomCode: this.roomData.roomCode, score: this.myScore })
+          console.log('时间到，发送playerFinished，我的分数:', this.myScore, 'selfId:', this.selfId)
+          this.emitSocketEvent('playerFinished', { 
+            roomCode: this.roomData.roomCode, 
+            score: this.myScore,
+            socketId: this.selfId
+          })
         }
       }, 1000)
     },
     endPK(data) {
+      console.log('PK结束，结算数据:', data)
       clearInterval(this.timer)
       this.isOver = true
       this.myScore = data.myScore
       this.otherScore = data.otherScore
       this.resultText = data.result
+      console.log('最终分数 - 我:', this.myScore, '对方:', this.otherScore)
     },
     inviteRematch() {
-      this.socket.emit('inviteRematch', this.roomData.roomCode)
+      this.emitSocketEvent('inviteRematch', this.roomData.roomCode)
       uni.showToast({ title: '邀请已发送', icon: 'none' })
     },
 startRematchCountdown() {
-  this.receivedFinal = false
   this.countdown = 3
   clearInterval(this.rematchTimer)
   this.rematchTimer = setInterval(() => {
@@ -201,7 +384,6 @@ startRematchCountdown() {
       this.countdown--
     } else {
       clearInterval(this.rematchTimer)
-      // ✅ 彻底重置所有状态
       this.resetGame()
       this.resultText = ''
       this.startPK()
@@ -216,14 +398,28 @@ startRematchCountdown() {
       this.generateProblems()
     },
     exit() {
+      // #ifdef H5
       if (this.socket) this.socket.disconnect()
+      // #endif
+      
+      // #ifdef APP-PLUS
+      if (this.socketTask) this.socketTask.close()
+      // #endif
+      
       uni.switchTab({ url: '/pages/tabbar/pk/pk' })
     }
   },
   onUnload() {
     clearInterval(this.timer)
     clearInterval(this.rematchTimer)
+    
+    // #ifdef H5
     if (this.socket) this.socket.disconnect()
+    // #endif
+    
+    // #ifdef APP-PLUS
+    if (this.socketTask) this.socketTask.close()
+    // #endif
   }
 }
 </script>

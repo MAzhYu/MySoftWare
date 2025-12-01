@@ -1,5 +1,7 @@
 <template>
   <view class="container">
+    <!-- 状态栏占位 -->
+    <view class="status-bar"></view>
     <view class="greeting-section">
       <text class="greeting-text">{{ greetingMessage }}</text>
     </view>
@@ -14,20 +16,6 @@
         {{ grade }}
       </view>
     </scroll-view>
-
-    <!-- 上次练习进度卡片 -->
-    <view v-if="lastProgress" class="progress-card">
-      <view class="progress-info">
-        <text class="progress-title">上次练习：</text>
-        <text class="progress-text">
-          {{ lastProgress.grade }} · {{ lastProgress.module }} · {{ lastProgress.difficulty }}
-        </text>
-        <text class="progress-detail">
-          题目数：{{ lastProgress.questionCount }} 
-        </text>
-      </view>
-      <button class="continue-btn" @click="continuePractice">继续练习</button>
-    </view>
 
     <!-- 模块区：水平滚动，只显示 4 个卡片（其余通过左右滑动查看） -->
     <view class="module-wrapper">
@@ -65,25 +53,11 @@
           </view>
         </view>
       </scroll-view>
-    </view>
-	
-    <view class="resource-section">
-      <view class="resource-header">
-        <image src="/static/icons/resource.png" class="resource-icon" />
-        <text class="resource-title">推荐学习资源（{{ currentGrade }}）</text>
+      <!-- 滑动提示气泡 -->
+      <view class="swipe-tip">
+        <text class="tip-icon">👉</text>
+        <text class="tip-text">滑动选择更多题型</text>
       </view>
-
-      <scroll-view scroll-x show-scrollbar="false" class="resource-scroll">
-        <view
-          v-for="(item, index) in currentResources"
-          :key="index"
-          class="resource-card"
-          @click="openResource(item.url)"
-        >
-          <image :src="item.image" class="resource-img" />
-          <text class="resource-name">{{ item.name }}</text>
-        </view>
-      </scroll-view>
     </view>
 	
   </view>
@@ -97,7 +71,6 @@ export default {
       currentGrade: '一年级',
       lastIndex: 0,
       slideDirection: '',
-      lastProgress: null, // ✅ 上次练习数据
       modules: {
         // 一二年级题型已替换为用户提供的清单（与后端 ProblemService 对应）
         一年级: [
@@ -153,80 +126,6 @@ export default {
           { name: '带分数的乘法', difficulty: '中等' }
         ],
       },
-      allResources: {
-        一年级: [
-          {
-            name: '认识数字和加减法',
-            url: 'https://www.bilibili.com/video/BV1tQy1BnEax',
-            image: '/static/james.png'
-          },
-          {
-            name: '有趣的图形世界',
-            url: 'https://www.bilibili.com/video/BV1ew4m197ZP',
-            image: '/static/curry.png'
-          }
-        ],
-        二年级: [
-          {
-            name: '乘法口诀歌教学',
-            url: 'https://www.bilibili.com/video/BV14i421a7o3',
-            image: '/static/lvbu.jpg'
-          },
-          {
-            name: '生活中的长度单位',
-            url: 'https://www.bilibili.com/video/BV1rL411b7RY',
-            image: '/static/dongzhuo.jpg'
-          }
-        ],
-        三年级: [
-          {
-            name: '分数入门动画讲解',
-            url: 'https://www.bilibili.com/video/BV1ZX4y1K7b6',
-            image: '/static/3.jpg'
-          },
-          {
-            name: '有趣的除法世界',
-            url: 'https://www.bilibili.com/video/BV1iKu9znE8i',
-            image: '/static/4.jpg'
-          }
-        ],
-        四年级: [
-          {
-            name: '图形面积计算技巧',
-            url: 'https://www.bilibili.com/video/BV17D4y1D7ot',
-            image: '/static/james.png'
-          },
-          {
-            name: '统计图表入门',
-            url: 'https://www.bilibili.com/video/BV1Sr4y1F7vW',
-            image: '/static/curry.png'
-          }
-        ],
-        五年级: [
-          {
-            name: '分数运算强化课',
-            url: 'https://www.bilibili.com/video/BV1FxYTzsEtw',
-            image: '/static/lvbu.jpg'
-          },
-          {
-            name: '小数与百分数的联系',
-            url: 'https://www.bilibili.com/video/BV1Pf4y1x7Fx',
-            image: '/static/dongzhuo.jpg'
-          }
-        ],
-        六年级: [
-          {
-            name: '图形变换与比例尺',
-            url: 'https://www.bilibili.com/video/BV15V4y1H7Jg',
-            image: '/static/3.jpg'
-          },
-          {
-            name: '概率初探',
-            url: 'https://www.bilibili.com/video/BV1oi4y1s7Tc',
-            image: '/static/4.jpg'
-          }
-        ]
-      }
     }
   },
   computed: {
@@ -244,14 +143,10 @@ export default {
       if (pages.length === 0) pages.push([]);
       return pages;
     },
-    currentResources() {
-      return this.allResources[this.currentGrade] || []
-    }
   },
   onShow() {
-    // 每次返回首页时刷新上次记录
-    const record = uni.getStorageSync('lastProgress')
-    this.lastProgress = record ? record : null
+    // ✅ 检查登录状态
+    this.checkLogin()
 	
     const hour = new Date().getHours()
     if (hour < 12) this.greetingMessage = '🌞 早上好，欢迎回来！'
@@ -259,6 +154,25 @@ export default {
     else this.greetingMessage = '🌙 晚上好，今天也要坚持一下哦～'
   },
   methods: {
+    /** ✅ 检查登录状态 */
+    checkLogin() {
+      const token = uni.getStorageSync('token')
+      if (!token) {
+        uni.showModal({
+          title: '提示',
+          content: '请先登录后使用',
+          showCancel: false,
+          success: () => {
+            uni.switchTab({
+              url: '/pages/tabbar/me/me'
+            })
+          }
+        })
+        return false
+      }
+      return true
+    },
+    
     /** ✅ 切换年级 */
     selectGrade(grade, index) {
       this.slideDirection = index > this.lastIndex ? 'slide-left' : 'slide-right'
@@ -268,20 +182,13 @@ export default {
 
     /** ✅ 进入模块（统一跳转exam.vue） */
     enterModule(module) {
+      if (!this.checkLogin()) return
+      
       const grade = this.currentGrade
       const name = module.name
       const difficulty = module.difficulty
       uni.navigateTo({
         url: `/pages/exam/exam?grade=${encodeURIComponent(grade)}&module=${encodeURIComponent(name)}&difficulty=${encodeURIComponent(difficulty)}`
-      })
-    },
-
-    /** ✅ 继续练习 */
-    continuePractice() {
-      if (!this.lastProgress) return
-      const p = this.lastProgress
-      uni.navigateTo({
-        url: `/pages/exam/exam?grade=${encodeURIComponent(p.grade)}&module=${encodeURIComponent(p.module)}&difficulty=${encodeURIComponent(p.difficulty)}`
       })
     },
 
@@ -292,25 +199,6 @@ export default {
       if (level === '困难') return '/static/icons/hard.png'
       return '/static/icons/medium.png'
     },
-    openResource(url) {
-      window.open(url, '_blank')
-      plus.runtime.openURL(url)
-     
-      wx.showModal({
-        title: '提示',
-        content: '即将打开外部页面，是否继续？',
-        success: (res) => {
-          if (res.confirm) {
-            wx.openEmbeddedMiniProgram({
-              appId: 'wx0e6ed4f51db9e0d3', // B站小程序ID
-              path: 'pages/video/video',
-              success: () => console.log('跳转成功'),
-              fail: () => wx.showToast({ title: '无法打开外部链接', icon: 'none' })
-            })
-          }
-        }
-      })
-    }
   }
 }
 </script>
@@ -354,56 +242,6 @@ export default {
   background-color: #20d0b0;
   color: white;
   font-weight: bold;
-}
-
-/* 上次练习卡片 */
-.progress-card {
-  background-color: #ffffff;
-  border-left: 10rpx solid #20d0b0;
-  border-radius: 20rpx;
-  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.1);
-  margin: 30rpx 20rpx;
-  margin-bottom: 0rpx;
-  padding: 25rpx 30rpx;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.progress-card:hover{
-  border-left: 10rpx solid #00496e;
-  transition: all 0.3s ease;
-}
-.progress-info {
-  display: flex;
-  flex-direction: column;
-}
-.progress-title {
-  font-size: 30rpx;
-  font-weight: bold;
-  color: #00496e;
-}
-.progress-text {
-  font-size: 28rpx;
-  color: #333;
-  margin-top: 5rpx;
-}
-.progress-detail {
-  font-size: 24rpx;
-  color: #666;
-  margin-top: 5rpx;
-}
-.continue-btn {
-  background-color: #20d0b0;
-  color: #00496e;
-  border: none;
-  border-radius: 30rpx;
-  padding: 10rpx 30rpx;
-  font-size: 28rpx;
-  transition: all 0.3s ease;
-}
-.continue-btn:hover {
-  background-color: #00496e;
-  color: white;
 }
 
 /* 模块动画容器 */
@@ -516,41 +354,6 @@ export default {
   background-color: #00496e;
   color: #eee;
 }
-.resource-section {
-  background-color: #fff;
-  padding: 30rpx 20rpx 60rpx;
-  border-top: 1px solid #eee;
-}
-.resource-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20rpx;
-}
-.resource-icon {
-  width: 40rpx;
-  height: 40rpx;
-  margin-right: 12rpx;
-}
-.resource-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #00496e;
-}
-.resource-scroll {
-  display: flex;
-  white-space: nowrap;
-}
-.resource-card {
-  display: inline-block;
-  width: 240rpx;
-  height: 220rpx;
-  margin-right: 20rpx;
-  background-color: #f8f9fb;
-  border-radius: 20rpx;
-  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  text-align: center;
-}
 .module-scroll {
   width: 100%;
   background-color: transparent;
@@ -603,6 +406,42 @@ export default {
   box-shadow: none;
   border-left: none;
 }
+
+/* 滑动提示气泡 */
+.swipe-tip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12rpx 30rpx;
+  margin: 20rpx auto;
+  background: linear-gradient(135deg, #20d0b0 0%, #1ab89f 100%);
+  border-radius: 50rpx;
+  box-shadow: 0 4rpx 12rpx rgba(32, 208, 176, 0.3);
+  width: fit-content;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+.tip-icon {
+  font-size: 32rpx;
+  margin-right: 12rpx;
+}
+
+.tip-text {
+  font-size: 24rpx;
+  color: #ffffff;
+  font-weight: 500;
+  letter-spacing: 1rpx;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(10rpx);
+  }
+}
+
 .resource-img {
   width: 100%;
   height: 150rpx;

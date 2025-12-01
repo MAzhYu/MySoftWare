@@ -4,7 +4,7 @@ var __export = (target, all) => {
     __defProp(target, name, { get: all[name], enumerable: true });
 };
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/engine.io-parser/build/esm/commons.js
+// ../../../MySoftWare/bzd/node_modules/engine.io-parser/build/esm/commons.js
 var PACKET_TYPES = /* @__PURE__ */ Object.create(null);
 PACKET_TYPES["open"] = "0";
 PACKET_TYPES["close"] = "1";
@@ -19,7 +19,7 @@ Object.keys(PACKET_TYPES).forEach((key) => {
 });
 var ERROR_PACKET = { type: "error", data: "parser error" };
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/engine.io-parser/build/esm/encodePacket.browser.js
+// ../../../MySoftWare/bzd/node_modules/engine.io-parser/build/esm/encodePacket.browser.js
 var withNativeBlob = typeof Blob === "function" || typeof Blob !== "undefined" && Object.prototype.toString.call(Blob) === "[object BlobConstructor]";
 var withNativeArrayBuffer = typeof ArrayBuffer === "function";
 var isView = (obj) => {
@@ -73,7 +73,7 @@ function encodePacketToBinary(packet, callback) {
   });
 }
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/engine.io-parser/build/esm/contrib/base64-arraybuffer.js
+// ../../../MySoftWare/bzd/node_modules/engine.io-parser/build/esm/contrib/base64-arraybuffer.js
 var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 var lookup = typeof Uint8Array === "undefined" ? [] : new Uint8Array(256);
 for (let i = 0; i < chars.length; i++) {
@@ -100,7 +100,7 @@ var decode = (base64) => {
   return arraybuffer;
 };
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/engine.io-parser/build/esm/decodePacket.browser.js
+// ../../../MySoftWare/bzd/node_modules/engine.io-parser/build/esm/decodePacket.browser.js
 var withNativeArrayBuffer2 = typeof ArrayBuffer === "function";
 var decodePacket = (encodedPacket, binaryType) => {
   if (typeof encodedPacket !== "string") {
@@ -153,7 +153,7 @@ var mapBinary = (data, binaryType) => {
   }
 };
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/engine.io-parser/build/esm/index.js
+// ../../../MySoftWare/bzd/node_modules/engine.io-parser/build/esm/index.js
 var SEPARATOR = String.fromCharCode(30);
 var encodePayload = (packets, callback) => {
   const length = packets.length;
@@ -295,7 +295,7 @@ function createPacketDecoderStream(maxPayload, binaryType) {
 }
 var protocol = 4;
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/@socket.io/component-emitter/lib/esm/index.js
+// ../../../MySoftWare/bzd/node_modules/@socket.io/component-emitter/lib/esm/index.js
 function Emitter(obj) {
   if (obj)
     return mixin(obj);
@@ -369,7 +369,7 @@ Emitter.prototype.hasListeners = function(event) {
   return !!this.listeners(event).length;
 };
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/engine.io-client/build/esm/globals.js
+// ../../../MySoftWare/bzd/node_modules/engine.io-client/build/esm/globals.js
 var nextTick = (() => {
   const isPromiseAvailable = typeof Promise === "function" && typeof Promise.resolve === "function";
   if (isPromiseAvailable) {
@@ -391,7 +391,7 @@ var defaultBinaryType = "arraybuffer";
 function createCookieJar() {
 }
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/engine.io-client/build/esm/util.js
+// ../../../MySoftWare/bzd/node_modules/engine.io-client/build/esm/util.js
 function pick(obj, ...attr) {
   return attr.reduce((acc, k) => {
     if (obj.hasOwnProperty(k)) {
@@ -439,7 +439,7 @@ function randomString() {
   return Date.now().toString(36).substring(3) + Math.random().toString(36).substring(2, 5);
 }
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/engine.io-client/build/esm/contrib/parseqs.js
+// ../../../MySoftWare/bzd/node_modules/engine.io-client/build/esm/contrib/parseqs.js
 function encode(obj) {
   let str = "";
   for (let i in obj) {
@@ -461,7 +461,7 @@ function decode2(qs) {
   return qry;
 }
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/engine.io-client/build/esm/transport.js
+// ../../../MySoftWare/bzd/node_modules/engine.io-client/build/esm/transport.js
 var TransportError = class extends Error {
   constructor(reason, description, context) {
     super(reason);
@@ -592,7 +592,7 @@ var Transport = class extends Emitter {
   }
 };
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/engine.io-client/build/esm/transports/polling.js
+// ../../../MySoftWare/bzd/node_modules/engine.io-client/build/esm/transports/polling.js
 var Polling = class extends Transport {
   constructor() {
     super(...arguments);
@@ -724,7 +724,7 @@ var Polling = class extends Transport {
   }
 };
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/engine.io-client/build/esm/contrib/has-cors.js
+// ../../../MySoftWare/bzd/node_modules/engine.io-client/build/esm/contrib/has-cors.js
 var value = false;
 try {
   value = typeof XMLHttpRequest !== "undefined" && "withCredentials" in new XMLHttpRequest();
@@ -732,7 +732,7 @@ try {
 }
 var hasCORS = value;
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/engine.io-client/build/esm/transports/polling-xhr.js
+// ../../../MySoftWare/bzd/node_modules/engine.io-client/build/esm/transports/polling-xhr.js
 function empty() {
 }
 var BaseXHR = class extends Polling {
@@ -973,7 +973,7 @@ function newRequest(opts) {
   }
 }
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/engine.io-client/build/esm/transports/websocket.js
+// ../../../MySoftWare/bzd/node_modules/engine.io-client/build/esm/transports/websocket.js
 var isReactNative = typeof navigator !== "undefined" && typeof navigator.product === "string" && navigator.product.toLowerCase() === "reactnative";
 var BaseWS = class extends Transport {
   get name() {
@@ -1067,7 +1067,7 @@ var WS = class extends BaseWS {
   }
 };
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/engine.io-client/build/esm/transports/webtransport.js
+// ../../../MySoftWare/bzd/node_modules/engine.io-client/build/esm/transports/webtransport.js
 var WT = class extends Transport {
   get name() {
     return "webtransport";
@@ -1130,14 +1130,14 @@ var WT = class extends Transport {
   }
 };
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/engine.io-client/build/esm/transports/index.js
+// ../../../MySoftWare/bzd/node_modules/engine.io-client/build/esm/transports/index.js
 var transports = {
   websocket: WS,
   webtransport: WT,
   polling: XHR
 };
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/engine.io-client/build/esm/contrib/parseuri.js
+// ../../../MySoftWare/bzd/node_modules/engine.io-client/build/esm/contrib/parseuri.js
 var re = /^(?:(?![^:@\/?#]+:[^:@\/]*@)(http|https|ws|wss):\/\/)?((?:(([^:@\/?#]*)(?::([^:@\/?#]*))?)?@)?((?:[a-f0-9]{0,4}:){2,7}[a-f0-9]{0,4}|[^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/;
 var parts = [
   "source",
@@ -1197,7 +1197,7 @@ function queryKey(uri, query) {
   return data;
 }
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/engine.io-client/build/esm/socket.js
+// ../../../MySoftWare/bzd/node_modules/engine.io-client/build/esm/socket.js
 var withEventListeners = typeof addEventListener === "function" && typeof removeEventListener === "function";
 var OFFLINE_EVENT_LISTENERS = [];
 if (withEventListeners) {
@@ -1764,7 +1764,7 @@ var Socket = class extends SocketWithUpgrade {
   }
 };
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/engine.io-client/build/esm/transports/polling-fetch.js
+// ../../../MySoftWare/bzd/node_modules/engine.io-client/build/esm/transports/polling-fetch.js
 var Fetch = class extends Polling {
   doPoll() {
     this._fetch().then((res) => {
@@ -1807,10 +1807,10 @@ var Fetch = class extends Polling {
   }
 };
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/engine.io-client/build/esm/index.js
+// ../../../MySoftWare/bzd/node_modules/engine.io-client/build/esm/index.js
 var protocol2 = Socket.protocol;
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/socket.io-client/build/esm/url.js
+// ../../../MySoftWare/bzd/node_modules/socket.io-client/build/esm/url.js
 function url(uri, path = "", loc) {
   let obj = uri;
   loc = loc || typeof location !== "undefined" && location;
@@ -1848,7 +1848,7 @@ function url(uri, path = "", loc) {
   return obj;
 }
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/socket.io-parser/build/esm/index.js
+// ../../../MySoftWare/bzd/node_modules/socket.io-parser/build/esm/index.js
 var esm_exports = {};
 __export(esm_exports, {
   Decoder: () => Decoder,
@@ -1857,7 +1857,7 @@ __export(esm_exports, {
   protocol: () => protocol3
 });
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/socket.io-parser/build/esm/is-binary.js
+// ../../../MySoftWare/bzd/node_modules/socket.io-parser/build/esm/is-binary.js
 var withNativeArrayBuffer3 = typeof ArrayBuffer === "function";
 var isView2 = (obj) => {
   return typeof ArrayBuffer.isView === "function" ? ArrayBuffer.isView(obj) : obj.buffer instanceof ArrayBuffer;
@@ -1894,7 +1894,7 @@ function hasBinary(obj, toJSON) {
   return false;
 }
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/socket.io-parser/build/esm/binary.js
+// ../../../MySoftWare/bzd/node_modules/socket.io-parser/build/esm/binary.js
 function deconstructPacket(packet) {
   const buffers = [];
   const packetData = packet.data;
@@ -1956,7 +1956,7 @@ function _reconstructPacket(data, buffers) {
   return data;
 }
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/socket.io-parser/build/esm/index.js
+// ../../../MySoftWare/bzd/node_modules/socket.io-parser/build/esm/index.js
 var RESERVED_EVENTS = [
   "connect",
   "connect_error",
@@ -2212,7 +2212,7 @@ var BinaryReconstructor = class {
   }
 };
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/socket.io-client/build/esm/on.js
+// ../../../MySoftWare/bzd/node_modules/socket.io-client/build/esm/on.js
 function on(obj, ev, fn) {
   obj.on(ev, fn);
   return function subDestroy() {
@@ -2220,7 +2220,7 @@ function on(obj, ev, fn) {
   };
 }
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/socket.io-client/build/esm/socket.js
+// ../../../MySoftWare/bzd/node_modules/socket.io-client/build/esm/socket.js
 var RESERVED_EVENTS2 = Object.freeze({
   connect: 1,
   connect_error: 1,
@@ -2994,7 +2994,7 @@ var Socket2 = class extends Emitter {
   }
 };
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/socket.io-client/build/esm/contrib/backo2.js
+// ../../../MySoftWare/bzd/node_modules/socket.io-client/build/esm/contrib/backo2.js
 function Backoff(opts) {
   opts = opts || {};
   this.ms = opts.min || 100;
@@ -3025,7 +3025,7 @@ Backoff.prototype.setJitter = function(jitter) {
   this.jitter = jitter;
 };
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/socket.io-client/build/esm/manager.js
+// ../../../MySoftWare/bzd/node_modules/socket.io-client/build/esm/manager.js
 var Manager = class extends Emitter {
   constructor(uri, opts) {
     var _a;
@@ -3375,7 +3375,7 @@ var Manager = class extends Emitter {
   }
 };
 
-// C:/Users/33532/Desktop/APP/MySoftWare/bzd/node_modules/socket.io-client/build/esm/index.js
+// ../../../MySoftWare/bzd/node_modules/socket.io-client/build/esm/index.js
 var cache = {};
 function lookup2(uri, opts) {
   if (typeof uri === "object") {

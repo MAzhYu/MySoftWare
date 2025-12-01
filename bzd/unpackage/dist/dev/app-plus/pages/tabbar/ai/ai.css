@@ -1,0 +1,139 @@
+
+.container[data-v-d575a73a] {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f7f8fa;
+  position: relative;
+}
+
+/* 顶部标题 */
+.header[data-v-d575a73a] {
+  display: flex;
+  align-items: center;
+  padding: 0.78125rem 1.25rem;
+  background-color: #fff;
+  border-bottom: 1px solid #eee;
+}
+.ai-icon[data-v-d575a73a] {
+  width: 1.5625rem;
+  height: 1.5625rem;
+  margin-right: 0.625rem;
+}
+.title[data-v-d575a73a] {
+  font-size: 1.0625rem;
+  font-weight: bold;
+  color: #00496e;
+}
+
+/* 聊天内容区 */
+.chat-box[data-v-d575a73a] {
+  flex: 1;
+  padding: 0.9375rem;
+  background-color: #f1f2f6;
+  overflow-y: auto;
+  box-sizing: border-box;
+  /* 留出底部空间防止被输入区遮住 */
+  margin-bottom: 8.125rem;
+}
+.message[data-v-d575a73a] {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.78125rem;
+}
+.message.user[data-v-d575a73a] {
+  flex-direction: row-reverse;
+}
+.avatar[data-v-d575a73a] {
+  width: 1.875rem;
+  height: 1.875rem;
+  border-radius: 50%;
+  margin: 0 0.46875rem;
+}
+.bubble[data-v-d575a73a] {
+  max-width: 70%;
+  padding: 0.625rem 0.78125rem;
+  border-radius: 0.625rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+.message.user .bubble[data-v-d575a73a] {
+  background-color: #20d0b0;
+  color: #fff;
+  border-bottom-right-radius: 0;
+}
+.message.ai .bubble[data-v-d575a73a] {
+  background-color: #fff;
+  color: #333;
+  border-bottom-left-radius: 0;
+}
+
+/* 底部整体区域（固定） */
+/* 底部整体区域（固定） */
+.bottom-box[data-v-d575a73a] {
+  position: fixed;
+  bottom: var(--window-bottom);
+  left: 0;
+  width: 100%;
+  background-color: #fff;
+  box-shadow: 0 -0.125rem 0.25rem rgba(0, 0, 0, 0.05);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 横向滚动快捷提问区 */
+.quick-ask[data-v-d575a73a] {
+  width: 100%;
+  overflow-x: scroll;
+  white-space: nowrap;
+  background-color: #fff;
+  padding: 0.46875rem 0.3125rem;
+  border-top: 1px solid #eee;
+}
+.quick-row[data-v-d575a73a] {
+  display: flex;
+  flex-direction: row;
+}
+.quick-btn[data-v-d575a73a] {
+  flex-shrink: 0;
+  margin: 0 0.3125rem;
+  background-color: #e6f9f5;
+  color: #00496e;
+  border-radius: 0.9375rem;
+  padding: 0.3125rem 0.78125rem;
+  font-size: 0.8125rem;
+  border: none;
+  white-space: nowrap; /* 避免按钮文字换行 */
+}
+
+/* 输入框 */
+.input-area[data-v-d575a73a] {
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  border-top: 1px solid #eee;
+  padding: 0.3125rem 0.625rem 0.625rem;
+}
+.chat-input[data-v-d575a73a] {
+  flex: 1;
+  height: 2.1875rem;
+  border: 1px solid #ccc;
+  border-radius: 1.09375rem;
+  padding: 0 0.625rem;
+  font-size: 0.875rem;
+  background-color: #f9f9f9;
+}
+.send-btn[data-v-d575a73a] {
+  background-color: #20d0b0;
+  color: #fff;
+  border: none;
+  border-radius: 0.9375rem;
+  padding: 0 1.09375rem;
+  height: 2.1875rem;
+  font-size: 0.875rem;
+  margin-left: 0.46875rem;
+}
+

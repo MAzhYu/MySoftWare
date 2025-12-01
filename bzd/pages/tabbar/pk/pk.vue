@@ -1,5 +1,7 @@
 <template>
   <view class="container">
+    <!-- 状态栏占位 -->
+    <view class="status-bar"></view>
 <!--    <text class="title">🔥口算 PK 对战🔥</text> -->
     <view v-if="step === 1" class="background-wrapper">
       <image src="/static/1.jpg" class="bg-left" mode="aspectFill" />
@@ -69,7 +71,30 @@ export default {
       roomCode: ''
     }
   },
+  onShow() {
+    // ✅ 检查登录状态
+    this.checkLogin()
+  },
   methods: {
+    /** ✅ 检查登录状态 */
+    checkLogin() {
+      const token = uni.getStorageSync('token')
+      if (!token) {
+        uni.showModal({
+          title: '提示',
+          content: '请先登录后使用PK功能',
+          showCancel: false,
+          success: () => {
+            uni.switchTab({
+              url: '/pages/tabbar/me/me'
+            })
+          }
+        })
+        return false
+      }
+      return true
+    },
+    
     chooseCreate() {
       this.step = 2
     },
@@ -92,8 +117,8 @@ export default {
     },
 
     createRoom() {
-      // 随机生成房间号
-      const code = Math.random().toString(36).substr(2, 6).toUpperCase()
+      // 生成6位数字房间号
+      const code = Math.floor(100000 + Math.random() * 900000).toString()
       const params = {
         mode: 'create',
         roomCode: code,
@@ -113,7 +138,7 @@ export default {
       }
       const params = {
         mode: 'join',
-        roomCode: this.roomCode.toUpperCase()
+        roomCode: this.roomCode
       }
       uni.navigateTo({
         url: `/pages/room/room?data=${encodeURIComponent(JSON.stringify(params))}`

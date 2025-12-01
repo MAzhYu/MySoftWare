@@ -1,5 +1,7 @@
 <template>
   <view class="container">
+    <!-- 状态栏占位 -->
+    <view class="status-bar"></view>
     <view class="header">
       <image src="/static/icons/register.png" class="icon" />
       <text class="title">注册账户</text>

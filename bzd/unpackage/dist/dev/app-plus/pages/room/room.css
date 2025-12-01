@@ -1,0 +1,91 @@
+
+.container[data-v-49055c66] { display:flex; flex-direction:column; align-items:center; padding:1.875rem 1.25rem; background-color:#f7f8fa; min-height:100vh;
+}
+.room-info[data-v-49055c66] { text-align:center; margin-bottom:1.25rem;
+}
+.room-title[data-v-49055c66] { font-size:1.125rem; font-weight:bold; color:#00496e;
+}
+.role-label[data-v-49055c66] { font-size:0.875rem; color:#888;
+}
+.waiting-box[data-v-49055c66] { text-align:center; width:100%;
+}
+.waiting-text[data-v-49055c66] { font-size:1rem; color:#00496e; margin-bottom:1.25rem;
+}
+.players[data-v-49055c66] { display:flex; justify-content:space-around; margin-bottom:1.875rem;
+}
+.player-card[data-v-49055c66] { display:flex; flex-direction:column; align-items:center;
+}
+.avatar[data-v-49055c66] { width:3.75rem; height:3.75rem; border-radius:1.875rem; background-color:#eee;
+}
+.player-name[data-v-49055c66] { margin-top:0.3125rem; font-size:0.875rem; color:#333;
+}
+.ready-status[data-v-49055c66] { font-size:0.8125rem; margin-top:0.1875rem;
+}
+.ready[data-v-49055c66] { color:#20d0b0;
+}
+.not-ready[data-v-49055c66] { color:#999;
+}
+.ready-btn[data-v-49055c66], .back-btn[data-v-49055c66] { width:80%; padding:0.75rem 0; border-radius:0.9375rem; font-size:0.9375rem; font-weight:600; margin-top:0.625rem;
+}
+.ready-btn[data-v-49055c66] { background-color:#20d0b0; color:#fff;
+}
+.back-btn[data-v-49055c66] { background-color:#ccc; color:white;
+}
+.countdown-box[data-v-49055c66] { margin-top:6.25rem;
+}
+.countdown[data-v-49055c66] { font-size:1.25rem; font-weight:bold; color:#00496e;
+}
+.config-box[data-v-49055c66] {
+  border: 0.0625rem solid #20d0b0;
+  border-radius: 0.625rem;
+  padding: 0.625rem;
+  margin: 0.625rem 0 1.25rem;
+  background-color: #f9fffd;
+  color: #00496e;
+}
+.config-title[data-v-49055c66] {
+  font-weight: bold;
+  font-size: 0.9375rem;
+  margin-bottom: 0.3125rem;
+  display: block;
+}
+.players[data-v-49055c66] {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 1.25rem;
+}
+.player-card[data-v-49055c66], .player[data-v-49055c66] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.avatar[data-v-49055c66] {
+  width: 3.75rem;
+  height: 3.75rem;
+  border-radius: 1.875rem;
+  border: 0.125rem solid #20d0b0;
+  object-fit: cover;
+  box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.1);
+}
+.player-name[data-v-49055c66], .name[data-v-49055c66] {
+  font-size: 0.875rem;
+  color: #333;
+  margin-top: 0.3125rem;
+}
+.tip-box[data-v-49055c66] {
+  margin-top: 1.25rem;
+  padding: 0.625rem;
+  background-color: #fff3cd;
+  border-radius: 0.375rem;
+  border: 0.0625rem solid #ffc107;
+}
+.tip-text[data-v-49055c66] {
+  font-size: 0.75rem;
+  color: #856404;
+  line-height: 1.5;
+  text-align: center;
+  display: block;
+}
+

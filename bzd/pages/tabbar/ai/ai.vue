@@ -1,5 +1,7 @@
 <template>
   <view class="container">
+    <!-- 状态栏占位 -->
+    <view class="status-bar"></view>
     <!-- 顶部标题 -->
     <view class="header">
       <image src="/static/icons/ai.png" class="ai-icon" />
@@ -74,7 +76,30 @@ export default {
       quickQuestions: []
     }
   },
+  onShow() {
+    // ✅ 检查登录状态
+    this.checkLogin()
+  },
   methods: {
+    /** ✅ 检查登录状态 */
+    checkLogin() {
+      const token = uni.getStorageSync('token')
+      if (!token) {
+        uni.showModal({
+          title: '提示',
+          content: '请先登录后使用AI助手',
+          showCancel: false,
+          success: () => {
+            uni.switchTab({
+              url: '/pages/tabbar/me/me'
+            })
+          }
+        })
+        return false
+      }
+      return true
+    },
+    
     // 将 Markdown 字符串渲染为 HTML（再交给 rich-text）
     renderMarkdown(md) {
       const esc = (s) => String(s)

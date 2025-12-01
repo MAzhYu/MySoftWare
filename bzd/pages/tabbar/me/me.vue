@@ -1,5 +1,7 @@
 <template>
   <view class="container">
+    <!-- 状态栏占位 -->
+    <view class="status-bar"></view>
     <!-- 顶部标题 -->
     <view class="header">
       <image :src="user?.avatarUrl || defaultAvatar" class="avatar" />

@@ -1,0 +1,202 @@
+
+.container[data-v-e65d6a22] {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  /* 给底部固定按钮留出空间，避免内容被遮挡 */
+  padding-bottom: 5.625rem;
+  background-color: #f7f8fa;
+}
+.header[data-v-e65d6a22] {
+  display: flex;
+  align-items: center;
+  padding: 0.9375rem 1.25rem;
+  background-color: #fff;
+  border-bottom: 1px solid #eee;
+}
+.header-icon[data-v-e65d6a22] {
+  width: 1.5625rem;
+  height: 1.5625rem;
+  margin-right: 0.625rem;
+}
+.title[data-v-e65d6a22] {
+  font-size: 1.0625rem;
+  font-weight: bold;
+  color: #00496e;
+}
+.filter-bar[data-v-e65d6a22] {
+  display: flex;
+  justify-content: space-around;
+  padding: 0.625rem;
+  background-color: #fff;
+  border-bottom: 1px solid #eee;
+}
+.filter-item[data-v-e65d6a22] {
+  background-color: #f0f0f0;
+  padding: 0.3125rem 0.78125rem;
+  border-radius: 0.9375rem;
+  font-size: 0.8125rem;
+  color: #333;
+}
+.list-wrapper[data-v-e65d6a22] {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.problem-list[data-v-e65d6a22] {
+  flex: 1;
+  padding: 0.625rem;
+  /* 底部留白，避免被固定按钮遮挡 */
+  padding-bottom: 6.25rem;
+}
+.problem-card[data-v-e65d6a22] {
+  background-color: #fff;
+  border-radius: 0.625rem;
+  padding: 0.78125rem;
+  margin-bottom: 0.625rem;
+  box-shadow: 0 0.125rem 0.3125rem rgba(0, 0, 0, 0.1);
+  border-left: 0.1875rem solid #f56c6c;
+}
+.problem-header[data-v-e65d6a22] {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.625rem;
+  padding-bottom: 0.46875rem;
+  border-bottom: 1px solid #eee;
+}
+.problem-meta[data-v-e65d6a22] {
+  display: flex;
+  gap: 0.3125rem;
+}
+.problem-type[data-v-e65d6a22],
+.problem-difficulty[data-v-e65d6a22],
+.wrong-count[data-v-e65d6a22] {
+  font-size: 0.75rem;
+  padding: 0.15625rem 0.46875rem;
+  border-radius: 0.625rem;
+  background-color: #f0f0f0;
+  color: #666;
+}
+.problem-actions[data-v-e65d6a22] {
+  display: flex;
+  gap: 0.3125rem;
+}
+.action-btn[data-v-e65d6a22] {
+  font-size: 0.6875rem;
+  padding: 0.15625rem 0.46875rem;
+  border-radius: 0.625rem;
+  border: none;
+}
+.action-btn.master[data-v-e65d6a22] {
+  background-color: #20d0b0;
+  color: #fff;
+}
+.action-btn.delete[data-v-e65d6a22] {
+  background-color: #f56c6c;
+  color: #fff;
+}
+.problem-content[data-v-e65d6a22] {
+  margin-bottom: 0.46875rem;
+}
+.expression[data-v-e65d6a22] {
+  font-size: 1rem;
+  color: #333;
+  font-weight: bold;
+}
+.answer-section[data-v-e65d6a22] {
+  margin-top: 0.46875rem;
+}
+.answer-row[data-v-e65d6a22] {
+  display: flex;
+  align-items: center;
+  margin-top: 0.3125rem;
+}
+.label[data-v-e65d6a22] {
+  font-size: 0.8125rem;
+  color: #666;
+  margin-right: 0.3125rem;
+}
+.correct-answer[data-v-e65d6a22] {
+  font-size: 0.875rem;
+  color: #20d0b0;
+  font-weight: bold;
+}
+.wrong-answer[data-v-e65d6a22] {
+  font-size: 0.875rem;
+  color: #f56c6c;
+  font-weight: bold;
+  text-decoration: line-through;
+}
+.problem-footer[data-v-e65d6a22] {
+  margin-top: 0.46875rem;
+  padding-top: 0.3125rem;
+  border-top: 1px solid #eee;
+}
+.date-text[data-v-e65d6a22] {
+  font-size: 0.6875rem;
+  color: #999;
+}
+.bottom-bar[data-v-e65d6a22] {
+  padding: 0.625rem;
+  background-color: #fff;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: center;
+}
+.bottom-bar .back-btn[data-v-e65d6a22] {
+  width: 80%;
+  background-color: #20d0b0;
+  color: #fff;
+  border-radius: 0.9375rem;
+  padding: 0.46875rem 1.875rem;
+  font-size: 0.875rem;
+  border: none;
+}
+.empty-state[data-v-e65d6a22] {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3.125rem 1.25rem;
+}
+.empty-icon[data-v-e65d6a22] {
+  width: 4.6875rem;
+  height: 4.6875rem;
+  margin-bottom: 0.9375rem;
+  opacity: 0.6;
+}
+.empty-text[data-v-e65d6a22] {
+  font-size: 0.875rem;
+  color: #999;
+  margin-bottom: 1.25rem;
+}
+.back-btn[data-v-e65d6a22] {
+  background-color: #20d0b0;
+  color: #fff;
+  border-radius: 0.9375rem;
+  padding: 0.46875rem 1.875rem;
+  font-size: 0.875rem;
+  border: none;
+}
+
+/* 固定底部样式 */
+.fixed-footer[data-v-e65d6a22] {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.5625rem 0;
+  background-color: #fff;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: center;
+  z-index: 1000;
+}
+.fixed-footer .back-btn[data-v-e65d6a22] {
+  width: 80%;
+  border-radius: 0.9375rem;
+  padding: 0.4375rem 1.875rem;
+  font-size: 0.875rem;
+}

@@ -1,5 +1,7 @@
 <template>
   <view class="exam-container">
+    <!-- 状态栏占位 -->
+    <view class="status-bar"></view>
     <!-- 顶部信息栏 -->
     <view class="exam-header">
       <text class="exam-grade">{{ grade }}</text>
@@ -185,6 +187,9 @@ export default {
     }
   },
   onLoad(options) {
+    // ✅ 检查登录状态
+    if (!this.checkLogin()) return
+    
     this.grade = options.grade || '一年级'
     this.moduleName = options.module || '加减训练'
     this.difficulty = options.difficulty || '简单'
@@ -315,6 +320,25 @@ export default {
     }
   },
   methods: {
+    /** ✅ 检查登录状态 */
+    checkLogin() {
+      const token = uni.getStorageSync('token')
+      if (!token) {
+        uni.showModal({
+          title: '提示',
+          content: '请先登录后进行练习',
+          showCancel: false,
+          success: () => {
+            uni.switchTab({
+              url: '/pages/tabbar/me/me'
+            })
+          }
+        })
+        return false
+      }
+      return true
+    },
+    
     // ✅ 更新推荐时长
     updateRecommendedTime() {
       let base = 0
