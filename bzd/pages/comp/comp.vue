@@ -283,6 +283,7 @@ export default {
     
     generateProblems() {
       const seed = this.roomData.config?.seed || this.roomData.seed || Date.now()
+      console.log('生成题目，使用seed:', seed)
       const random = this.seededRandom(seed)
     
       const count = this.roomData.config?.questionCount || 10
@@ -296,12 +297,16 @@ export default {
         const question = `${a} ${op} ${b}`
         let answer = op === '+' ? a + b : op === '-' ? a - b : a * b
         problems.push({ question, answer })
+        if (i < 3) {
+          console.log(`题目${i + 1}: ${question} = ${answer}`)
+        }
       }
     
       this.problems = problems
       this.index = 0
       this.currentProblem = this.problems[0]
       this.isOver = false
+      console.log('生成了', problems.length, '道题目，第一题:', this.currentProblem)
     },
 	seededRandom(seed) {
 	  let s = seed

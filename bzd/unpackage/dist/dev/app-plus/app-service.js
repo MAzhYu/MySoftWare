@@ -1425,9 +1425,51 @@ ${JSON.stringify(payload, null, 2)}
     onLoad(options) {
       if (!this.checkLogin())
         return;
-      this.grade = options.grade || "一年级";
-      this.moduleName = options.module || "加减训练";
-      this.difficulty = options.difficulty || "简单";
+      formatAppLog("log", "at pages/exam/exam.vue:193", "exam页面接收到的原始参数:", options);
+      try {
+        let grade = options.grade || "一年级";
+        let moduleName = options.module || "加减训练";
+        let difficulty = options.difficulty || "简单";
+        if (grade.includes("%")) {
+          grade = decodeURIComponent(grade);
+          formatAppLog("log", "at pages/exam/exam.vue:204", "grade解码一次:", grade);
+          if (grade.includes("%")) {
+            grade = decodeURIComponent(grade);
+            formatAppLog("log", "at pages/exam/exam.vue:208", "grade解码两次:", grade);
+          }
+        }
+        if (moduleName.includes("%")) {
+          moduleName = decodeURIComponent(moduleName);
+          formatAppLog("log", "at pages/exam/exam.vue:214", "moduleName解码一次:", moduleName);
+          if (moduleName.includes("%")) {
+            moduleName = decodeURIComponent(moduleName);
+            formatAppLog("log", "at pages/exam/exam.vue:217", "moduleName解码两次:", moduleName);
+          }
+        }
+        if (difficulty.includes("%")) {
+          difficulty = decodeURIComponent(difficulty);
+          formatAppLog("log", "at pages/exam/exam.vue:223", "difficulty解码一次:", difficulty);
+          if (difficulty.includes("%")) {
+            difficulty = decodeURIComponent(difficulty);
+            formatAppLog("log", "at pages/exam/exam.vue:226", "difficulty解码两次:", difficulty);
+          }
+        }
+        this.grade = grade;
+        this.moduleName = moduleName;
+        this.difficulty = difficulty;
+      } catch (e) {
+        formatAppLog("error", "at pages/exam/exam.vue:235", "解码参数失败:", e, options);
+        this.grade = options.grade || "一年级";
+        this.moduleName = options.module || "加减训练";
+        this.difficulty = options.difficulty || "简单";
+      }
+      formatAppLog("log", "at pages/exam/exam.vue:241", "exam页面最终参数:", {
+        grade: this.grade,
+        moduleName: this.moduleName,
+        difficulty: this.difficulty,
+        gradeNumber: this.gradeNumber,
+        problemType: this.problemType
+      });
       this.updateRecommendedTime();
     },
     computed: {
@@ -1645,7 +1687,7 @@ ${JSON.stringify(payload, null, 2)}
               problems = res.data;
             }
           } catch (e) {
-            formatAppLog("warn", "at pages/exam/exam.vue:424", "解析后端出题响应时出现异常", e, res);
+            formatAppLog("warn", "at pages/exam/exam.vue:477", "解析后端出题响应时出现异常", e, res);
           }
           if (problems && problems.length > 0) {
             this.questions = problems.map((p) => {
@@ -1712,11 +1754,11 @@ ${JSON.stringify(payload, null, 2)}
             });
             uni.hideLoading();
           } else {
-            formatAppLog("warn", "at pages/exam/exam.vue:489", "后端出题返回非预期格式或空数据：", res);
+            formatAppLog("warn", "at pages/exam/exam.vue:542", "后端出题返回非预期格式或空数据：", res);
             throw new Error("后端返回数据为空或格式不支持");
           }
         } catch (err) {
-          formatAppLog("error", "at pages/exam/exam.vue:493", "获取题目失败:", err);
+          formatAppLog("error", "at pages/exam/exam.vue:546", "获取题目失败:", err);
           uni.hideLoading();
           uni.showModal({
             title: "提示",
@@ -2124,11 +2166,11 @@ ${JSON.stringify(payload, null, 2)}
               };
             });
           } else {
-            formatAppLog("warn", "at pages/exam/exam.vue:994", "提交评分时后端返回非预期格式或错误：", res);
+            formatAppLog("warn", "at pages/exam/exam.vue:1047", "提交评分时后端返回非预期格式或错误：", res);
             throw new Error(res && res.message || "评分失败");
           }
         } catch (err) {
-          formatAppLog("error", "at pages/exam/exam.vue:998", "提交答案失败:", err);
+          formatAppLog("error", "at pages/exam/exam.vue:1051", "提交答案失败:", err);
           uni.hideLoading();
           uni.showModal({
             title: "提示",
@@ -2258,7 +2300,7 @@ ${JSON.stringify(payload, null, 2)}
           }
           return typeof ua === "object" ? JSON.stringify(ua) : String(ua);
         } catch (e) {
-          formatAppLog("warn", "at pages/exam/exam.vue:1185", "formatUserAnswer error", e, detail);
+          formatAppLog("warn", "at pages/exam/exam.vue:1238", "formatUserAnswer error", e, detail);
           return detail.userAnswer ?? "";
         }
       },
@@ -2276,7 +2318,7 @@ ${JSON.stringify(payload, null, 2)}
           }
           return String(ca);
         } catch (e) {
-          formatAppLog("warn", "at pages/exam/exam.vue:1203", "formatCorrectAnswer error", e, detail);
+          formatAppLog("warn", "at pages/exam/exam.vue:1256", "formatCorrectAnswer error", e, detail);
           return detail.correctAnswer ?? "";
         }
       }
@@ -3584,6 +3626,7 @@ ${JSON.stringify(payload, null, 2)}
       generateProblems() {
         var _a, _b;
         const seed = ((_a = this.roomData.config) == null ? void 0 : _a.seed) || this.roomData.seed || Date.now();
+        formatAppLog("log", "at pages/comp/comp.vue:286", "生成题目，使用seed:", seed);
         const random = this.seededRandom(seed);
         const count = ((_b = this.roomData.config) == null ? void 0 : _b.questionCount) || 10;
         const problems = [];
@@ -3595,11 +3638,15 @@ ${JSON.stringify(payload, null, 2)}
           const question = `${a} ${op} ${b}`;
           let answer = op === "+" ? a + b : op === "-" ? a - b : a * b;
           problems.push({ question, answer });
+          if (i < 3) {
+            formatAppLog("log", "at pages/comp/comp.vue:301", `题目${i + 1}: ${question} = ${answer}`);
+          }
         }
         this.problems = problems;
         this.index = 0;
         this.currentProblem = this.problems[0];
         this.isOver = false;
+        formatAppLog("log", "at pages/comp/comp.vue:309", "生成了", problems.length, "道题目，第一题:", this.currentProblem);
       },
       seededRandom(seed) {
         let s = seed;
@@ -3614,7 +3661,7 @@ ${JSON.stringify(payload, null, 2)}
         const correct = parseInt(this.answer) === this.currentProblem.answer;
         if (correct) {
           this.myScore++;
-          formatAppLog("log", "at pages/comp/comp.vue:318", "答对了，我的分数:", this.myScore, "selfId:", this.selfId);
+          formatAppLog("log", "at pages/comp/comp.vue:323", "答对了，我的分数:", this.myScore, "selfId:", this.selfId);
           this.emitSocketEvent("updateScore", {
             roomCode: this.roomData.roomCode,
             score: this.myScore,
@@ -3632,7 +3679,7 @@ ${JSON.stringify(payload, null, 2)}
           clearInterval(this.timer);
           this.isOver = true;
           this.resultText = "正在结算...";
-          formatAppLog("log", "at pages/comp/comp.vue:336", "题目做完，发送playerFinished，我的分数:", this.myScore, "selfId:", this.selfId);
+          formatAppLog("log", "at pages/comp/comp.vue:341", "题目做完，发送playerFinished，我的分数:", this.myScore, "selfId:", this.selfId);
           this.emitSocketEvent("playerFinished", {
             roomCode: this.roomData.roomCode,
             score: this.myScore,
@@ -3653,7 +3700,7 @@ ${JSON.stringify(payload, null, 2)}
             clearInterval(this.timer);
             this.isOver = true;
             this.resultText = "正在结算...";
-            formatAppLog("log", "at pages/comp/comp.vue:356", "时间到，发送playerFinished，我的分数:", this.myScore, "selfId:", this.selfId);
+            formatAppLog("log", "at pages/comp/comp.vue:361", "时间到，发送playerFinished，我的分数:", this.myScore, "selfId:", this.selfId);
             this.emitSocketEvent("playerFinished", {
               roomCode: this.roomData.roomCode,
               score: this.myScore,
@@ -3663,13 +3710,13 @@ ${JSON.stringify(payload, null, 2)}
         }, 1e3);
       },
       endPK(data) {
-        formatAppLog("log", "at pages/comp/comp.vue:366", "PK结束，结算数据:", data);
+        formatAppLog("log", "at pages/comp/comp.vue:371", "PK结束，结算数据:", data);
         clearInterval(this.timer);
         this.isOver = true;
         this.myScore = data.myScore;
         this.otherScore = data.otherScore;
         this.resultText = data.result;
-        formatAppLog("log", "at pages/comp/comp.vue:372", "最终分数 - 我:", this.myScore, "对方:", this.otherScore);
+        formatAppLog("log", "at pages/comp/comp.vue:377", "最终分数 - 我:", this.myScore, "对方:", this.otherScore);
       },
       inviteRematch() {
         this.emitSocketEvent("inviteRematch", this.roomData.roomCode);

@@ -190,9 +190,62 @@ export default {
     // ✅ 检查登录状态
     if (!this.checkLogin()) return
     
-    this.grade = options.grade || '一年级'
-    this.moduleName = options.module || '加减训练'
-    this.difficulty = options.difficulty || '简单'
+    console.log('exam页面接收到的原始参数:', options)
+    
+    // ✅ 解码参数（处理APP端的双重编码问题）
+    try {
+      let grade = options.grade || '一年级'
+      let moduleName = options.module || '加减训练'
+      let difficulty = options.difficulty || '简单'
+      
+      // 检测是否需要解码（包含%说明是编码的）
+      if (grade.includes('%')) {
+        grade = decodeURIComponent(grade)
+        console.log('grade解码一次:', grade)
+        // APP端可能二次编码，再尝试解码一次
+        if (grade.includes('%')) {
+          grade = decodeURIComponent(grade)
+          console.log('grade解码两次:', grade)
+        }
+      }
+      
+      if (moduleName.includes('%')) {
+        moduleName = decodeURIComponent(moduleName)
+        console.log('moduleName解码一次:', moduleName)
+        if (moduleName.includes('%')) {
+          moduleName = decodeURIComponent(moduleName)
+          console.log('moduleName解码两次:', moduleName)
+        }
+      }
+      
+      if (difficulty.includes('%')) {
+        difficulty = decodeURIComponent(difficulty)
+        console.log('difficulty解码一次:', difficulty)
+        if (difficulty.includes('%')) {
+          difficulty = decodeURIComponent(difficulty)
+          console.log('difficulty解码两次:', difficulty)
+        }
+      }
+      
+      this.grade = grade
+      this.moduleName = moduleName
+      this.difficulty = difficulty
+      
+    } catch (e) {
+      console.error('解码参数失败:', e, options)
+      this.grade = options.grade || '一年级'
+      this.moduleName = options.module || '加减训练'
+      this.difficulty = options.difficulty || '简单'
+    }
+    
+    console.log('exam页面最终参数:', {
+      grade: this.grade,
+      moduleName: this.moduleName,
+      difficulty: this.difficulty,
+      gradeNumber: this.gradeNumber,
+      problemType: this.problemType
+    })
+    
     this.updateRecommendedTime()
   },
   computed: {
