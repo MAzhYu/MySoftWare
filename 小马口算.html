@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小马口算 - 让学习更轻松</title>
+    <!-- 使用你提供的图片作为网站图标 -->
+    <link rel="icon" href="./image_855fdd.png" type="image/png">
+    
+    <!-- 引入 Tailwind CSS 进行快速美化 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Font Awesome 图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 自定义配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            light: '#E0F2FE', // 浅蓝背景
+                            DEFAULT: '#0284C7', // 主色调
+                            dark: '#0C4A6E', // 深色文字
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 自定义动画效果 */
+        .fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-700 font-sans antialiased">
+
+    <!-- 导航栏 -->
+    <nav class="bg-white/90 backdrop-blur-md fixed w-full z-50 shadow-sm transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-3">
+                    <!-- LOGO 图片 -->
+                    <img src="./image_855fdd.png" alt="小马口算Logo" class="h-10 w-10 rounded-lg shadow-md">
+                    <span class="text-2xl font-bold text-brand-dark tracking-wide">小马口算</span>
+                </div>
+                <!-- 桌面端菜单 -->
+                <div class="hidden md:flex space-x-8">
+                    <a href="#features" class="text-slate-600 hover:text-brand font-medium transition">功能介绍</a>
+                    <a href="#team" class="text-slate-600 hover:text-brand font-medium transition">团队成员</a>
+                    <a href="#download" class="text-slate-600 hover:text-brand font-medium transition">下载中心</a>
+                    <a href="#contact" class="text-slate-600 hover:text-brand font-medium transition">联系我们</a>
+                </div>
+                <!-- 移动端菜单按钮 -->
+                <div class="md:hidden">
+                    <button onclick="toggleMenu()" class="text-slate-600 hover:text-brand focus:outline-none">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- 移动端下拉菜单 -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t p-4 space-y-3 shadow-lg">
+            <a href="#features" class="block text-slate-600 font-medium">功能介绍</a>
+            <a href="#team" class="block text-slate-600 font-medium">团队成员</a>
+            <a href="#download" class="block text-slate-600 font-medium">下载中心</a>
+            <a href="#contact" class="block text-slate-600 font-medium">联系我们</a>
+        </div>
+    </nav>
+
+    <!-- Hero 区域 (首屏) -->
+    <header class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            <div class="fade-in-up">
+                <span class="bg-brand/10 text-brand font-semibold py-1 px-3 rounded-full text-sm mb-6 inline-block">
+                    🚀 让妈妈省心的 AI 助教
+                </span>
+                <h1 class="text-4xl md:text-6xl font-extrabold text-brand-dark mb-6 leading-tight">
+                    快乐口算，<span class="text-brand">智慧成长</span>
+                </h1>
+                <p class="text-lg md:text-xl text-slate-600 mb-10 max-w-2xl mx-auto">
+                    专为小学生打造的智能学习伴侣。集成自动出题、拍照批改、错题本以及强大的 AI 辅导功能，支持在线 PK 对战，让学习不再枯燥。
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <a href="#download" class="bg-brand hover:bg-sky-600 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                        <i class="fab fa-android text-xl"></i>
+                        立即下载 App
+                    </a>
+                    <a href="#features" class="bg-white hover:bg-slate-50 text-brand-dark font-bold py-4 px-8 rounded-xl shadow border border-slate-200 transition flex items-center justify-center gap-2">
+                        了解更多
+                        <i class="fas fa-arrow-down"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <!-- 装饰背景圆 -->
+        <div class="absolute top-0 left-0 w-64 h-64 bg-blue-200/30 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+        <div class="absolute bottom-0 right-0 w-96 h-96 bg-indigo-200/30 rounded-full blur-3xl translate-x-1/3 translate-y-1/3"></div>
+    </header>
+
+    <!-- 项目介绍 / 功能特色 -->
+    <section id="features" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-brand-dark mb-4">核心功能</h2>
+                <p class="text-slate-500">不仅仅是口算，更是全方位的智能家教</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- 卡片 1 -->
+                <div class="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:shadow-lg transition group">
+                    <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition">
+                        <i class="fas fa-robot text-2xl text-brand"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-brand-dark mb-3">AI 智能助教</h3>
+                    <p class="text-slate-600 leading-relaxed">
+                        内置 AI 引擎，提供学情分析、错题讲解和智能对话。哪里不会点哪里，如同私教在侧。
+                    </p>
+                </div>
+
+                <!-- 卡片 2 -->
+                <div class="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:shadow-lg transition group">
+                    <div class="w-14 h-14 bg-orange-100 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition">
+                        <i class="fas fa-gamepad text-2xl text-orange-500"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-brand-dark mb-3">趣味在线 PK</h3>
+                    <p class="text-slate-600 leading-relaxed">
+                        支持好友创建房间在线对战，实时显示答题进度。通过游戏化机制激发孩子的胜负欲和学习兴趣。
+                    </p>
+                </div>
+
+                <!-- 卡片 3 -->
+                <div class="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:shadow-lg transition group">
+                    <div class="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition">
+                        <i class="fas fa-check-double text-2xl text-green-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-brand-dark mb-3">自动出题与批改</h3>
+                    <p class="text-slate-600 leading-relaxed">
+                        覆盖小学 1-6 年级题型，支持自定义题量和难度。计时练习，自动判分，解放家长的双手。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 团队成员 -->
+    <section id="team" class="py-20 bg-brand-light/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-brand-dark mb-4">团队介绍</h2>
+                <p class="text-slate-500">为了共同的目标，我们全力以赴</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- 成员 1 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition text-center">
+                    <div class="w-20 h-20 mx-auto bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-4">项</div>
+                    <h3 class="text-lg font-bold text-gray-800">项恩奇</h3>
+                    <span class="text-xs font-semibold bg-blue-100 text-brand py-1 px-2 rounded-full">组长 / 原型设计</span>
+                    <p class="text-sm text-gray-500 mt-3">负责项目统筹、原型设计，并协助前后端开发。</p>
+                </div>
+
+                <!-- 成员 2 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition text-center">
+                    <div class="w-20 h-20 mx-auto bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-4">卢</div>
+                    <h3 class="text-lg font-bold text-gray-800">卢瑞</h3>
+                    <span class="text-xs font-semibold bg-green-100 text-green-700 py-1 px-2 rounded-full">前端开发</span>
+                    <p class="text-sm text-gray-500 mt-3">负责 Uni-app 前端页面实现、交互逻辑及官网开发。</p>
+                </div>
+
+                <!-- 成员 3 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition text-center">
+                    <div class="w-20 h-20 mx-auto bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-4">蓝</div>
+                    <h3 class="text-lg font-bold text-gray-800">蓝辰君</h3>
+                    <span class="text-xs font-semibold bg-purple-100 text-purple-700 py-1 px-2 rounded-full">后端开发</span>
+                    <p class="text-sm text-gray-500 mt-3">负责 Node.js 后端架构、API 接口实现及数据库管理。</p>
+                </div>
+
+                <!-- 成员 4 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition text-center">
+                    <div class="w-20 h-20 mx-auto bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-4">马</div>
+                    <h3 class="text-lg font-bold text-gray-800">马哲禹</h3>
+                    <span class="text-xs font-semibold bg-orange-100 text-orange-700 py-1 px-2 rounded-full">需求 & 测试 & 开发</span>
+                    <p class="text-sm text-gray-500 mt-3">负责 NABCD 需求分析、功能测试及后端开发。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 下载中心 -->
+    <section id="download" class="py-20 bg-white">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl font-bold text-brand-dark mb-10">资源下载</h2>
+            
+            <div class="bg-gradient-to-r from-brand to-cyan-500 rounded-3xl p-10 md:p-16 shadow-2xl text-white relative overflow-hidden">
+                <!-- 背景装饰 -->
+                <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/20 rounded-full blur-2xl"></div>
+                <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-white/20 rounded-full blur-2xl"></div>
+
+                <div class="relative z-10">
+                    <h3 class="text-2xl font-bold mb-2">准备好开始了吗？</h3>
+                    <p class="text-blue-100 mb-8">获取安装包体验最新功能，或下载手册快速上手。</p>
+                    
+                    <div class="flex flex-col sm:flex-row justify-center gap-6">
+                        <!-- App 下载按钮 -->
+                        <!-- 这里的 href 填写你打包后的 APK 文件路径，例如 ./app-release.apk -->
+                        <a href="./xmMath2.0.apk" download="小马口算2.0.apk" class="group bg-white text-brand font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl hover:bg-slate-50 transition flex items-center justify-center gap-3">
+                            <div class="bg-brand text-white w-8 h-8 rounded-full flex items-center justify-center group-hover:scale-110 transition">
+                                <i class="fab fa-android"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="text-xs text-gray-400 uppercase tracking-wide">Android</div>
+                                <div>下载 App 安装包</div>
+                            </div>
+                        </a>
+
+                        <!-- 手册 下载按钮 -->
+                        <!-- 这里的 href 填写你的 PDF 文件路径，例如 ./manual.pdf -->
+                        <a href="https://javaweb-learn-heliuyue.oss-cn-beijing.aliyuncs.com/%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8C.pdf"  class="bg-brand-dark/30 hover:bg-brand-dark/50 text-white border border-white/30 font-bold py-4 px-8 rounded-xl transition flex items-center justify-center gap-3 backdrop-blur-sm">
+                            <i class="fas fa-book-open text-xl"></i>
+                            <div>下载用户手册</div>
+                        </a>
+                    </div>
+                    <p class="mt-6 text-sm text-blue-100 opacity-80">* 目前仅支持 Android 系统设备</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚与联系方式 -->
+    <footer id="contact" class="bg-slate-900 text-slate-300 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <!-- 左侧信息 -->
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <img src="./image_855fdd.png" alt="Logo" class="h-8 w-8 rounded grayscale hover:grayscale-0 transition">
+                        <span class="text-xl font-bold text-white">小马口算</span>
+                    </div>
+                    <p class="text-slate-400 text-sm max-w-sm">
+                        致力于为小学生提供最优质的数学口算练习体验，结合人工智能技术，让教育更高效，让家长更省心。
+                    </p>
+                </div>
+
+                <!-- 右侧联系 -->
+                <div class="md:text-right">
+                    <h3 class="text-lg font-bold text-white mb-4">联系我们</h3>
+                    <a href="mailto:562409420@qq.com" class="inline-flex items-center gap-2 text-brand hover:text-white transition group">
+                        <div class="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center group-hover:bg-brand transition">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <span class="text-lg">562409420@qq.com</span>
+                    </a>
+                    <p class="text-slate-500 text-xs mt-4">
+                        © 2025 小马口算团队. All rights reserved.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 简单的 JS 脚本 -->
+    <script>
+        // 移动端菜单切换
+        function toggleMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // 简单的入场动画触发
+        document.addEventListener('DOMContentLoaded', () => {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('fade-in-up');
+                    }
+                });
+            });
+
+            // 监听所有 section
+            document.querySelectorAll('section').forEach((section) => {
+                section.classList.add('opacity-100'); // 默认显示，这里可以加更复杂的滚动动画逻辑
+            });
+        });
+    </script>
+</body>
+</html>
