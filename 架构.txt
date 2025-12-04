@@ -1,151 +1,115 @@
-系统总体架构图与模块说明（2025-11-05）
+项目架构说明（小马口算）
 
-一、总体架构（模块划分与交互）
+一、总体概览
+- 前端：uni-app（Vue 3 默认，条件编译兼容 Vue2），支持 H5 / App(uni-app) / 小程序多端。位于 `bzd/` 目录。
+- 后端：Node.js + Express + Socket.IO + MySQL（Sequelize ORM）。位于 `oral-calculation-backend/` 目录。
+- 即时通信：Socket.IO（H5 直接使用 socket.io-client；App 端使用 uni 原生 WebSocket 并按 Socket.IO 协议封装）。
+- 认证授权：基于 JWT，前端通过 `token` 存储在 `uni.getStorageSync('token')`，后端 `middleware/auth.js` 负责校验。
+- 存储与外部服务：MySQL（用户、错题等数据）；阿里云 OSS（头像等资源上传）。
+- 构建与发布：HBuilderX（uni-app）；后端使用 `node server.js` 或 `nodemon`。
 
-+----------------------------- 前端（uni-app：H5 / App / 小程序） -----------------------------+
-|                                                                                           |
-|  页面层（Vue SFC）：                                                                        |
-|  - 首页（pages/tabbar/index/index.vue）                                                     |
-|  - AI 助手（pages/tabbar/ai/ai.vue）                                                        |
-|  - PK 入口（pages/tabbar/pk/pk.vue） → 等待房间（pages/room/room.vue） → 对战（pages/comp/comp.vue） |
-|  - 我的（pages/tabbar/me/me.vue）                                                            |
-|  - 考试/练习（pages/exam/exam.vue）                                                         |
-|  - 错题集（pages/wrongProblems/wrongProblems.vue）                                          |
-|  - 注册（pages/register/register.vue）                                                      |
-|                                                                                           |
-|  通用封装：bzd/request.js（API 端点集中管理 + 请求封装）                                     |
-+-------------------------------------------------------------------------------------------+
-                 |                         |                               |
-                 | HTTP/JSON               | WebSocket（Socket.IO）         |
-                 v                         v                               v
-+-------------------------------------- 后端 API（Express 5） --------------------------------------+
-| 路由（routes/）：                                                                              |
-|  - auth.en.js：注册/登录/个人信息/学习进度/家长-孩子关系/头像上传（OSS）                               |
-|  - problems.js：出题、提交批改、错题集 CRUD、选项/推荐接口                                          |
-|  - ai.js：AI 状态、对话、讲解（DeepSeek适配）                                 |
-|                                                                                           |
-| 中间件（middleware/）：auth.js（JWT 鉴权 protect/authorize）                                 |
-| 服务（services/）：                                                                          |
-|  - ProblemService.js：题目生成与答案校验                                                        |
-|  - AIService.js：AI Provider 适配层（DeepSeek 等）                                              |
-|  - OSSService.js：阿里云 OSS 上传（头像）                                                      |
-| 配置（config/）：database.mysql.js（Sequelize + MySQL）                                        |
-| 数据模型（models/）：                                                                          |
-|  - User.mysql.js（用户/学习进度/头像等）                                                        |
-|  - WrongProblem.mysql.js（错题记录）                                                           |
-| 实时对战（server.js 内）：Socket.IO 房间/准备/比分/再战逻辑                                      |
-+--------------------------------------------------------------------------------------------------+
-                 |                             |                              |
-                 | Sequelize ORM               | HTTP API                     | SDK/HTTP
-                 v                             v                              v
-           +-----------+                 +------------+                 +--------------+
-           |   MySQL   |                 |  DeepSeek  |                 |  Aliyun OSS  |
-           +-----------+                 +------------+                 +--------------+
-            持久化数据                     AI 对话/讲解                   头像对象存储
+二、前端架构（bzd/）
+1. 目录结构与核心文件
+- `App.vue`：全局样式、状态栏安全区（status-bar）适配、应用生命周期。
+- `main.js`：应用入口，初始化 uni-app。
+- `pages.json`：页面与路由配置（tabbar：首页/AI/PK/我的；功能页：考试、错题、注册、房间、对战等）。
+- `request.js`：统一 HTTP 请求封装（携带 `token`、错误处理、API 路径 `api.*`）。
+- `uni.scss`：全局样式变量。
+- `pages/`：页面模块
+	- `tabbar/index/index.vue`：主页，年级横向滚动、题型模块分页、进入练习导航。
+	- `tabbar/ai/ai.vue`：AI 页面（聊天/学情分析/讲解错题/智能出题）。
+	- `tabbar/pk/pk.vue`：PK模式选择与创建/加入房间。
+	- `tabbar/me/me.vue`：我的/登录注册入口与个人信息展示。
+	- `exam/exam.vue`：练习与批改页面，支持后端出题与本地降级出题、倒计时、评分、导出/错题集。
+	- `wrongProblems/wrongProblems.vue`：错题集浏览。
+	- `register/register.vue`：注册页。
+	- `room/room.vue`：PK 等待房间（房主/挑战者、准备状态、倒计时、进入对战）。
+	- `comp/comp.vue`：PK 对战页面（实时计分、题目生成、结算与再战）。
 
+2. 关键前端机制
+- 登录态校验：除登录/注册外，其他页面在 `onShow` 或 `onLoad` 调用 `checkLogin()`，未登录弹窗并跳转 `me`。
+- 状态栏安全区：各页模板首部包含 `<view class="status-bar"></view>`，`App.vue` 动态计算高度，避免与系统状态栏重叠。
+- 参数传递与解码：从首页进入 `exam` 时通过 `encodeURIComponent` 传参；`exam.vue` 在 `onLoad` 做多次 `decodeURIComponent` 容错，避免 App 端双重编码导致乱码与题型错配。
+- 题型映射：`exam.vue` 的 `problemType` 将首页模块文案映射到后端题型key；未覆盖的旧模块走兼容映射或本地降级生成。
+- 出题与批改：
+	- 后端出题：`GET /api/problems?type=...&difficulty=...&count=...&grade=...`；`request.js` 统一封装。
+	- 本地降级：网络异常时切换到本地生成逻辑，覆盖一至六年级主要题型。
+	- 批改：`POST /api/problems/submit` 返回 `summary` 与 `details`，前端展示正确率、细项与导出。
+- 导出题目：H5 使用 Blob 下载；App 使用 `plus.io` 写入私有目录；微信小程序使用 `wx.getFileSystemManager`。
+- PK 通信：
+	- H5：`socket.io-client` 直连。
+	- App：`uni.connectSocket`，发送 `40` 握手/`42[event,data]` 事件，手动解析处理。
+	- `room.vue` 等待逻辑：接收 `roomCreated`/`playerJoined`/`playerReady`/`startPK`，维护 `players`、`selfIndex`、`bothReady`，进入 `comp`。
+	- `comp.vue` 对战逻辑：生成同种子题目、实时分数 `updateScore`（携带 `socketId`），完成时 `playerFinished`，接收 `finalResult` 展示双方结果。
 
-二、模块功能简述
+三、后端架构（oral-calculation-backend/）
+1. 目录结构与核心文件
+- `server.js`：应用入口，Express 初始化、路由挂载、Socket.IO 服务、房间状态管理与结算逻辑。
+- `config/database.mysql.js`：MySQL 与 Sequelize 连接配置。
+- `middleware/auth.js`：JWT 认证中间件。
+- `routes/`：REST API 路由
+	- `auth.en.js`：登录/注册/用户信息。
+	- `problems.js`：出题与批改接口。
+	- `ai.js`：AI相关接口（智能出题/讲解等）。
+- `models/`：Sequelize 模型
+	- `User.mysql.js`：用户模型。
+	- `WrongProblem.mysql.js`：错题模型。
+- `services/`：服务层
+	- `ProblemService.js`：题目生成与批改逻辑。
+	- `AIService.js`：AI 能力封装（聊天/学情分析/错题讲解/智能出题）。
+	- `OSSService.js`：阿里云 OSS 上传与访问。
 
-1. 前端（uni-app）
-- pages/tabbar/index/index.vue（首页）
-  - 入口页与导航，展示推荐或快捷入口。
-- pages/tabbar/ai/ai.vue（AI 助手）
-  - 对话：/api/ai/chat，采用“关怀老师”口吻。
-  - 错题讲解：/api/ai/explain，竖式分步讲解，支持 Markdown 渲染。
-  - 智能出题：日常情景 3 题并附讲解。
-- pages/tabbar/pk/pk.vue（PK 入口）
-  - 创建/加入房间参数配置，跳转到等待房间。
-- pages/room/room.vue（等待房间）
-  - 展示房间号、准备状态；统一用色块头像（绿色=本人、红色=对手）。
-  - 双方准备好后倒计时进入对战。
-- pages/comp/comp.vue（PK 对战）
-  - 本地题流与计时，实时分数同步（Socket.IO）；对战结束、再战邀请。
-  - 头像统一为色块（绿色/红色）
-- pages/exam/exam.vue（考试/练习）
-  - 题量/时长配置；支持“比较题”为 >/</= 选项；出题（后端/本地降级）与计时。
-  - 提交批改：/api/problems/submit，展示成绩与每题对错。
-  - 新增：导出 TXT 按钮，内容包含题目、你的答案、是否正确、错题正确答案、正确率与用时；支持 H5/APP/微信小程序多端落地。
-- pages/wrongProblems/wrongProblems.vue（错题集）
-  - 展示用户错题；支持标记掌握与删除。
-- pages/register/register.vue（注册）
-  - 账号注册并登录。
-- pages/tabbar/me/me.vue（我的/个人中心）
-  - 展示学习进度、练习时长、角色等；支持年级修改（合并 JSON 更新）。
-  - 头像展示与上传：调用 /api/auth/avatar，后端存储到 OSS。
-- bzd/request.js
-  - 统一 API 地址与请求封装（含 Authorization Bearer Token 注入）。
+2. Socket.IO 房间与事件（简述）
+- 房间结构：`rooms = { roomCode: { players: [ {id,name,avatar,ready}, ... ], scores: {}, finished: {}, finalized, timer, config } }`
+- 核心事件：
+	- `createRoom(data)`：生成纯数字6位房间号，初始化房主与配置，返回 `roomCreated`。
+	- `joinRoom(roomCode, playerData)`：加入房间，广播 `playerJoined`（携带玩家列表与配置）。
+	- `playerReady(roomCode)`：更新就绪状态，全部就绪后广播 `startPK` 并启动倒计时。
+	- `joinComp(roomCode)`：对战阶段加入；维护在线成员。
+	- `updateScore({roomCode, score})`：记录分数并广播给对方 `{socketId, score}`。
+	- `playerFinished({roomCode, score})`：标记完成，双方完成或倒计时到期时 `finalizeRoom()`，分别向双方发送 `finalResult`。
+	- 再战：`inviteRematch`/`acceptRematch`/`declineRematch` 与 `startRematch`。
 
-2. 后端（Express + Sequelize）
-- routes/auth.en.js
-  - POST /api/auth/register：注册（用户名/邮箱唯一）。
-  - POST /api/auth/login：登录发 JWT；记录 lastLogin。
-  - GET /api/auth/me：获取个人信息（含 avatarUrl、learningProgress、totalPracticeTime）。
-  - PUT /api/auth/profile：更新基本信息与年级（合并 learningProgress，避免全量覆盖）。
-  - POST /api/auth/update-progress：手动更新学习进度（可选）。
-  - POST /api/auth/avatar：上传头像（multer 内存）→ OSSService 上传 → 更新 avatarUrl。
-  - 家长-孩子关系：/bind-child、/confirm-parent、/children-progress。
-- routes/problems.js
-  - GET /api/problems：题目生成（addition/subtraction/multiplication/division/mixed/comparison/fill_blank）。
-  - POST /api/problems/submit：批改评分，返回 summary 与 details；写入错题表；更新用户学习进度（JSON 字段合规更新）。
-  - 错题集：GET /wrong；PUT /wrong/:id/master；DELETE /wrong/:id。
-  - 辅助：GET /options、GET /recommendation/:grade。
-- routes/ai.js
-  - GET /api/ai/status：健康与配置检测。
-  - POST /api/ai/chat：通用对话（归一化返回 content）。
-  - POST /api/ai/explain：错题讲解（约束 Markdown 输出、竖式分解）。
-- services/ProblemService.js
-  - 根据类型/难度生成题目；对“比较题”提供 >/</= 选项；校验答案。
-- services/AIService.js
-  - Provider 适配（DeepSeek、OpenAI、Azure OpenAI）；统一请求与返回结构。
-- services/OSSService.js
-  - 基于 ali-oss 的上传：avatars/{userId}/...；返回可访问 URL。
-- middleware/auth.js
-  - protect：JWT 校验并注入 req.user。
-  - authorize：角色授权控制。
-- models/User.mysql.js
-  - 字段：username、email、password（bcrypt）、role、avatarUrl（默认图）、learningProgress(JSON：grade/currentLevel/totalExercises/correctAnswers/averageAccuracy/lastPracticeDate)、achievements、streak、totalPracticeTime 等。
-  - 方法：comparePassword、updateLearningProgress（重建 JSON、changed 标记、按字段保存并 reload）。
-- models/WrongProblem.mysql.js
-  - 字段（按使用推断）：userId、expression、type、difficulty、correctAnswer、userAnswer、grade、module、wrongCount、isMastered、lastAttemptDate。
-- config/database.mysql.js
-  - Sequelize 初始化与连接；同步（项目中启用了 alter 以便新增列如 avatarUrl）。
-- server.js
-  - Express 实例、全局中间件、路由注册、全局错误处理与 404；
-  - Socket.IO 实时对战：createRoom/joinRoom/playerReady/startPK/joinComp/updateScore/endPK/inviteRematch 等。
+四、跨端差异与兼容策略
+- 字符编码：App 端可能出现双重 URL 编码（如 `%E4%BA%8C年级`），`exam.vue` 在 `onLoad` 做多次解码容错并记录日志。
+- Socket 兼容：App 使用原生 WebSocket + Socket.IO 协议消息（`40` 握手、`42[event,data]` 事件），封装发送与解析，保证与后端一致。
+- 状态栏与安全区：通过统一 `status-bar` 占位避免内容与系统UI重叠。
+- 题型映射一致性：首页文案→后端题型key 映射集中在 `exam.vue` 的 `problemType`，覆盖别名与旧模块。
+- 本地降级出题：网络异常时前端生成题目，避免 App 端无网或接口异常导致空白。
 
-3. 数据存储与外部依赖
-- MySQL（Sequelize 管理）：用户、错题等业务数据持久化。
-- DeepSeek（或 OpenAI/Azure OpenAI）：AI 对话与讲解。
-- 阿里云 OSS：头像文件对象存储（公共读或签名 URL 访问）。
+五、数据与安全
+- 数据库：MySQL（用户、错题记录、练习提交数据）。
+- 认证：JWT；后端 `auth` 路由签发，前端 `request.js` 将 `token` 置于请求头。
+- 鉴权：后端中间件校验；前端页级校验阻止未登录用户访问。
+- 文件：头像等上传到 OSS（`OSSService`）；前端显示使用 URL。
 
-4. 核心业务流程（概述）
-- 练习与批改：
-  前端配置题量/时长 → 调用 /api/problems 获取题目 → 做题（比较题走 >/</= 选项）→ 提交到 /api/problems/submit → 后端评分、记录错题、更新学习进度 → 前端展示成绩与每题详情 → 支持导出 TXT。
-- AI 讲解与出题：
-  前端将错题或学情发送到 /api/ai/explain 或 /api/ai/chat → 后端调用 DeepSeek → 返回 Markdown（竖式/分步）→ 前端渲染。
-- 头像上传：
-  前端选图 → POST /api/auth/avatar（multipart）→ 后端 OSS 上传并保存 URL → 前端刷新头像展示。
-- 在线 PK：
-  一方创建房间，另一方加入 → 等待双方“准备” → 倒计时开始 → 本地题目/计时、Socket.IO 同步比分 → 结束结算 → 再战邀请。
+六、部署与运行
+1. 后端
+- 开发：
+```bash
+cd oral-calculation-backend
+npm install
+node server.js
+# 或开发模式
+npx nodemon server.js
+```
 
-5. 安全与异常处理
-- 鉴权：JWT（Authorization: Bearer <token>）。
-- 参数校验：express-validator（路由级校验）。
-- 错误处理：统一 500 返回、404 兜底；日志通过 console 输出。
-- 配置：dotenv 管理环境变量（DB、JWT、AI、OSS）。
+2. 前端
+- H5 运行：使用 HBuilderX 运行到浏览器。
+- App 打包：HBuilderX 打包（清理 `unpackage/` 缓存后重试）。
+- 依赖：`socket.io-client`（仅 H5 使用）；App 端无需此依赖即可通过原生 WebSocket 运行。
 
-6. 运行环境（摘要）
-- Node.js 18+，MySQL 8+。
-- 前端 uni-app，支持 H5/App/小程序；请求通过 bzd/request.js 注入 Token。
-- 后端依赖：express、sequelize、mysql2、jsonwebtoken、express-validator、multer、ali-oss、socket.io 等。
+七、常见问题与排查
+- App 参数乱码：检查是否双重编码；`exam.vue` 已做双解码容错。
+- App PK不显示头像/准备：确认前端已使用原生 WebSocket 并解析 `playerJoined`/`playerReady`，后端事件返回结构为对象数组。
+- 房间号不一致：确保使用纯数字6位生成逻辑，避免 base36 字母数字混合。
+- 分数显示错位：前端以 `selfIndex`/`socketId` 区分“我”和“对手”，不要使用房主/挑战者固定位置。
+- 出题错位：确认首页模块名称与 `exam.vue` 的 `problemType` 映射一致；必要时在控制台打印参数与映射结果。
 
-7. 实体关系（简述）
-- User（1）——（N）WrongProblem：一个用户可拥有多条错题记录；错题含题型/难度/正确答案/用户答案/错题次数等。
+八、后续规划（建议）
+- 将 Socket.IO App 端封装抽取为公共模块，减少页面内重复代码。
+- 在 `ProblemService` 中对题型 key 建立统一枚举，前后端共享，减少文案映射带来的歧义。
+- 增加端到端集成测试（登录、出题、批改、PK 创建到结算）。
+- 增加错误上报与日志聚合，便于定位移动端问题。
 
-8. 约定与扩展
-- JSON 字段（learningProgress）更新需避免就地修改，采用 set + changed + save(fields) + reload。
-- API 返回统一结构：{ success, message?, data?/details?/summary? }。
-- 可扩展 Provider：AIService 支持按环境变量切换不同厂商。
-- 可扩展静态导出：目前提供 TXT，后续可增加 PDF/Word 导出与批量打印。
-
-（完）
+（本说明根据当前仓库代码结构与近期改动整理，旨在帮助快速理解与排查跨端问题。）

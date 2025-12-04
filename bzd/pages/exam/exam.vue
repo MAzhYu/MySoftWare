@@ -1158,21 +1158,78 @@ saveProgress(isUnfinished) {
 
       // #ifdef APP-PLUS
       try {
-        plus.io.requestFileSystem(plus.io.PRIVATE_DOC, (fs) => {
-          fs.root.getDirectory('exports', { create: true }, (dir) => {
-            dir.getFile(filename, { create: true }, (file) => {
-              file.createWriter((writer) => {
-                writer.onwrite = () => {
-                  uni.showToast({ title: '已保存到本地文件', icon: 'none' })
-                }
-                writer.seek(0)
-                writer.write(content)
-              }, (err) => {
-                uni.showToast({ title: '写入失败', icon: 'none' })
+        // 优先尝试写入系统根 Download 目录，便于用户查找
+        const isAndroid = uni.getSystemInfoSync().platform === 'android'
+        if (isAndroid && typeof plus !== 'undefined' && plus.android) {
+          try {
+            const main = plus.android.runtimeMainActivity()
+            const Environment = plus.android.importClass('android.os.Environment')
+            const File = plus.android.importClass('java.io.File')
+            const FileOutputStream = plus.android.importClass('java.io.FileOutputStream')
+            const downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            const targetFile = new File(downloadsDir, filename)
+            const fos = new FileOutputStream(targetFile)
+            fos.write(new java.lang.String(content).getBytes('UTF-8'))
+            fos.flush()
+            fos.close()
+            const absPath = targetFile.getAbsolutePath()
+            uni.showModal({ title: '导出成功', content: `文件已保存：\n${absPath}`, showCancel: false })
+          } catch (androidErr) {
+            // 回退到 PUBLIC_DOWNLOADS/_downloads（Android 11+ 沙箱路径）
+            const targetDir = '_downloads'
+            plus.io.requestFileSystem(plus.io.PUBLIC_DOWNLOADS, (fs) => {
+              fs.root.getDirectory(targetDir, { create: true }, (dir) => {
+                dir.getFile(filename, { create: true }, (fileEntry) => {
+                  fileEntry.createWriter((writer) => {
+                    writer.onwrite = () => {
+                      const localPath = plus.io.convertLocalFileSystemURL(fileEntry.fullPath)
+                      uni.showModal({ title: '导出成功', content: `文件已保存：\n${localPath}`, showCancel: false })
+                    }
+                    writer.seek(0)
+                    writer.write(content)
+                  }, () => uni.showToast({ title: '写入失败', icon: 'none' }))
+                }, () => uni.showToast({ title: '创建文件失败', icon: 'none' }))
+              }, () => uni.showToast({ title: '创建目录失败', icon: 'none' }))
+            }, () => {
+              // 如果公共下载不可用，回退到私有目录并提示
+              plus.io.requestFileSystem(plus.io.PRIVATE_DOC, (fs) => {
+                fs.root.getDirectory('exports', { create: true }, (dir) => {
+                  dir.getFile(filename, { create: true }, (fileEntry) => {
+                    fileEntry.createWriter((writer) => {
+                      writer.onwrite = () => {
+                        const localPath = plus.io.convertLocalFileSystemURL(fileEntry.fullPath)
+                        uni.showModal({
+                          title: '已保存到应用目录',
+                          content: `文件路径：\n${localPath}\n（可通过分享或文件管理器移动到Download）`,
+                          showCancel: false
+                        })
+                      }
+                      writer.seek(0)
+                      writer.write(content)
+                    }, () => uni.showToast({ title: '写入失败', icon: 'none' }))
+                  })
+                })
               })
             })
-          })
-        }, () => uni.showToast({ title: '无法访问存储', icon: 'none' }))
+          }
+        } else {
+          // 非 Android 或无法使用 plus.android，使用 PUBLIC_DOWNLOADS 方案
+          const targetDir = '_downloads'
+          plus.io.requestFileSystem(plus.io.PUBLIC_DOWNLOADS, (fs) => {
+            fs.root.getDirectory(targetDir, { create: true }, (dir) => {
+              dir.getFile(filename, { create: true }, (fileEntry) => {
+                fileEntry.createWriter((writer) => {
+                  writer.onwrite = () => {
+                    const localPath = plus.io.convertLocalFileSystemURL(fileEntry.fullPath)
+                    uni.showModal({ title: '导出成功', content: `文件已保存：\n${localPath}`, showCancel: false })
+                  }
+                  writer.seek(0)
+                  writer.write(content)
+                }, () => uni.showToast({ title: '写入失败', icon: 'none' }))
+              }, () => uni.showToast({ title: '创建文件失败', icon: 'none' }))
+            }, () => uni.showToast({ title: '创建目录失败', icon: 'none' }))
+          }, () => uni.showToast({ title: '无法访问存储', icon: 'none' }))
+        }
       } catch (e) {
         uni.showToast({ title: '导出失败', icon: 'none' })
       }
